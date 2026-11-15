@@ -1,43 +1,42 @@
+# Arquitectura de la solución
 
-# Solution Architecture
+## Descripción general
 
-## Overview
+Este proyecto muestra un proceso automatizado de tratamiento de archivos Excel mediante Microsoft Power Platform, SharePoint Online y Office Scripts.
 
-This project demonstrates an automated Excel processing pipeline using Microsoft Power Platform, SharePoint Online and Office Scripts.
+La solución combina validación manual, transformación automatizada de datos, creación de registros de SharePoint y gestión dinámica de permisos.
 
-The solution combines manual validation, automated data transformation, SharePoint record creation and dynamic permission management.
-
-## Architecture Diagram
+## Diagrama de arquitectura
 
 ```mermaid
 flowchart TD
-    A["SharePoint: New Request with Excel Attachment"]
-    B["FL01: File Reception"]
-    C["Protected Document Library"]
-    D["Validation Document Library"]
-    E["Manual Excel Review"]
-    F{"Status = Validated?"}
-    G["FL02: Excel Processing"]
-    H["Restrict Validator Permissions to Read"]
-    I["Set Status to Processed"]
-    J["Create Temporary Excel Copy"]
-    K["Office Script 1: Extract Records"]
-    L["Power Automate: Create Workbook from Template"]
-    M["Office Script 2: Populate Export Workbook"]
-    N["Sequential Record Processing"]
-    O["Create SharePoint Records"]
-    P["FL05: Apply Dynamic Record Permissions"]
-    Q["Permissions Configuration List"]
-    R["FL03: Scheduled Temporary File Cleanup"]
-    T["FL04: Processing Logs and Error Tracking"]
-    U["SharePoint: Processing Logs List"]
+    A["SharePoint: Nueva solicitud con Excel adjunto"]
+    B["FL01: Recepción de archivos"]
+    C["Biblioteca de documentos protegidos"]
+    D["Biblioteca de documentos de validación"]
+    E["Revisión manual de Excel"]
+    F{"¿Estado = Validado?"}
+    G["FL02: Procesamiento de Excel"]
+    H["Restringir los permisos de validadores a lectura"]
+    I["Establecer estado Procesado"]
+    J["Crear copia temporal de Excel"]
+    K["Office Script 1: Extraer registros"]
+    L["Power Automate: Crear libro desde plantilla"]
+    M["Office Script 2: Rellenar libro de exportación"]
+    N["Procesamiento secuencial de registros"]
+    O["Crear registros de SharePoint"]
+    P["FL05: Aplicar permisos dinámicos a registros"]
+    Q["Lista de configuración de permisos"]
+    R["FL03: Limpieza programada de archivos temporales"]
+    T["FL04: Registros de ejecución y seguimiento de errores"]
+    U["SharePoint: Lista de registros de ejecución"]
 
     A --> B
     B --> C
     B --> D
     D --> E
     E --> F
-    F -->|Yes| G
+    F -->|Sí| G
     G --> H
     H --> I
     I --> J
@@ -48,55 +47,51 @@ flowchart TD
     N --> O
     O --> P
     Q --> P
-    G -.->|"Child flow invocation"| T
+    G -.->|"Invocación de flujo secundario"| T
     T --> U
-    S["Scheduled: Daily"]
+    S["Programación: Diaria"]
     S --> R
-
 ```
 
-## Main Components
+## Componentes principales
 
-### FL01: File Reception
+### FL01: Recepción de archivos
 
-Receives requests containing Excel attachments and creates copies in two SharePoint document libraries:
+Recibe solicitudes con archivos Excel adjuntos y crea copias en dos bibliotecas de documentos de SharePoint:
 
-- Protected library for administrative access.
-- Validation library for authorized reviewers.
+- Biblioteca protegida para acceso administrativo.
+- Biblioteca de validación para revisores autorizados.
 
-### FL02: Excel Processing
+### FL02: Procesamiento de Excel
 
-Triggered when a file is marked as validated.
+Se desencadena cuando un archivo se marca como validado.
 
-The workflow restricts editing permissions, updates the processing status, extracts Excel data, generates output files and creates related SharePoint records.
+El flujo restringe los permisos de edición, actualiza el estado de procesamiento, extrae datos de Excel, genera archivos de salida y crea registros relacionados de SharePoint.
 
-Primary and associated records are processed sequentially to preserve their relationships.
+Los registros principales y asociados se procesan secuencialmente para conservar sus relaciones.
 
-### FL03: Temporary File Cleanup
+### FL03: Limpieza de archivos temporales
 
-Scheduled workflow that removes temporary processing files older than eight hours.
+Flujo programado que elimina archivos temporales de procesamiento con más de ocho horas de antigüedad.
 
-### FL04: Processing Logs and Error Tracking
+### FL04: Registros de ejecución y seguimiento de errores
 
-Reusable child flow invoked by FL02 to centralize processing logs and error reporting.
+Flujo secundario reutilizable, invocado por FL02, que centraliza los registros de procesamiento y la notificación de errores.
 
-The flow receives execution information, including the source file, processing reference, record counts, error details and execution identifier.
+Recibe información de ejecución, como el archivo de origen, la referencia de procesamiento, los recuentos de registros, los detalles de los errores y el identificador de ejecución.
 
-It creates a SharePoint log entry to provide traceability and support troubleshooting.
+Crea una entrada en una lista de SharePoint para proporcionar trazabilidad y facilitar la resolución de incidencias.
 
-This separation keeps the main processing workflow focused on business operations while delegating execution logging to a dedicated component.
+Esta separación permite que el flujo principal se centre en las operaciones de negocio y delegue los registros de ejecución en un componente específico.
 
+### FL05: Permisos dinámicos
 
-### FL05: Dynamic Permissions
+Se desencadena cuando se crea un registro de SharePoint.
 
-Triggered when a SharePoint record is created.
+Utiliza una lista de configuración para determinar los grupos de seguridad correspondientes y aplica permisos a nivel de registro.
 
-Uses a configuration list to determine the appropriate security groups and applies record-level permissions.
+## Seguridad
 
-## Security
+Esta arquitectura representa una demostración independiente con datos ficticios y configuraciones genéricas.
 
-This architecture represents an independent demonstration using fictional data and generic configurations.
-
-No proprietary corporate components, credentials or internal configurations are included.
-```
-
+No incluye componentes corporativos propietarios, credenciales ni configuraciones internas.
