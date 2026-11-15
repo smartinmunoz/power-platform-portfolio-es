@@ -1,130 +1,122 @@
+# Biblioteca de documentos derivados
 
-# Derived Documents Library
+## 1. Descripción general
 
-## 1. Overview
+La biblioteca de documentos derivados (*Derived Documents Library*) es una biblioteca de documentos de SharePoint Online ubicada en el sitio principal de SharePoint.
 
-The Derived Documents Library is a SharePoint Online document library located in the Main SharePoint Site.
+Almacena las copias de documentos Excel que FL01 crea automáticamente cuando se presenta una nueva solicitud mediante la lista de recepción de solicitudes.
 
-The library stores Excel document copies created automatically by FL01 when a new request is submitted through the Request Intake List.
+Todos los usuarios autorizados del sitio principal, incluidos Site Owners, Site Members y el personal externo, tienen acceso de solo lectura a estos documentos. Pueden consultarlos y descargarlos sin modificarlos.
 
-All authorized Main SharePoint Site users, including Site Owners, Site Members, and External Staff, have read-only access to these documents. They can consult and download the files without modifying them.
+> **Aviso sobre el portfolio:** Esta documentación describe una demostración conceptual con nombres y ejemplos ficticios. No incluye direcciones URL de producción, credenciales, identificadores reales ni información empresarial confidencial.
 
+## 2. Configuración de la biblioteca
 
-> **Portfolio disclaimer:** This documentation describes a conceptual demonstration using fictional names and examples. No production URLs, credentials, real identifiers, or confidential business information are included.
-
-
-## 2. Library Configuration
-
-| Property | Configuration |
+| Propiedad | Configuración |
 |---|---|
-| Library Name | Derived Documents Library |
-| Location | Main SharePoint Site |
-| Library Type | SharePoint Document Library |
-| Primary Purpose | Read-only consultation of Excel document copies created by FL01 |
-| Site Owners | Read |
-| Site Members | Read |
-| Authorized External Staff | Read |
-| Document Creation | FL01 through an authorized Power Automate connection |
-| Document Modification | Restricted to authorized automation connections and Site Collection Administrators |
+| Nombre de la biblioteca | Derived Documents Library |
+| Ubicación | Sitio principal de SharePoint |
+| Tipo | Biblioteca de documentos de SharePoint |
+| Finalidad principal | Consulta de solo lectura de las copias de documentos Excel creadas por FL01 |
+| Site Owners | Lectura |
+| Site Members | Lectura |
+| Personal externo autorizado | Lectura |
+| Creación de documentos | FL01 mediante una conexión autorizada de Power Automate |
+| Modificación de documentos | Restringida a conexiones de automatización autorizadas y administradores de la colección de sitios |
 
-## 3. Purpose
+## 3. Finalidad
 
+La biblioteca ofrece una ubicación centralizada y de solo lectura donde los usuarios autorizados del sitio principal pueden acceder a las copias de Excel creadas por FL01 inmediatamente después de presentar la solicitud y completar correctamente la distribución documental.
 
-The library provides a centralized, read-only location where authorized Main SharePoint Site users can access Excel document copies created by FL01 immediately after request submission and successful document distribution.
+Sus objetivos principales son:
 
-Its main objectives are:
+- Centralizar el acceso a los documentos derivados.
+- Ofrecer una experiencia de consulta documental coherente.
+- Separar los documentos derivados de los adjuntos originales de las solicitudes.
+- Permitir la descarga de documentos a los usuarios autorizados.
+- Impedir modificaciones no autorizadas.
+- Facilitar la trazabilidad y la gestión documental.
 
-- Centralize access to derived documents.
-- Provide a consistent document consultation experience.
-- Separate derived documents from original request attachments.
-- Allow authorized users to download documents.
-- Prevent unauthorized modification.
-- Support traceability and document management.
+La biblioteca complementa la lista de recepción de solicitudes del sitio principal.
 
-The library complements the Request Intake List in the Main SharePoint Site.
+## 4. Integración con el sitio principal
 
-## 4. Main Site Integration
+El sitio principal de SharePoint es el punto de entrada de la solución para los usuarios.
 
-The Main SharePoint Site provides the user-facing entry point for the solution.
+Sus recursos principales son:
 
-Its principal resources include:
+- **Lista de recepción de solicitudes:** permite al personal externo presentar solicitudes mediante un formulario personalizado de SharePoint.
+- **Biblioteca de documentos derivados:** proporciona acceso de solo lectura a los documentos disponibles para los usuarios autorizados.
 
-- **Request Intake List:** Allows external staff to submit requests using a customized SharePoint form.
-- **Derived Documents Library:** Provides read-only access to documents made available to authorized users.
+El subsitio de gestión contiene los recursos internos de validación, procesamiento, configuración y registro de ejecuciones.
 
-The Management Subsite contains the internal validation, processing, configuration, and logging resources.
+Esta separación permite distinguir las funciones orientadas al personal externo de las operaciones internas de gestión.
 
-This separation helps distinguish external-facing functionality from internal management operations.
+## 5. Ciclo de vida documental
 
+El ciclo de vida comienza cuando un usuario autorizado crea un elemento en la lista de recepción de solicitudes y adjunta un libro de Excel.
 
-## 5. Document Lifecycle
+FL01 realiza la distribución inicial:
 
-The document lifecycle begins when an authorized user submits a new item in the Request Intake List with an attached Excel workbook.
+1. Un usuario autorizado presenta una solicitud y adjunta un libro de Excel.
+2. FL01 recupera el adjunto de Excel de la lista de recepción de solicitudes.
+3. FL01 crea una copia en la biblioteca de documentos derivados, ubicada en el sitio principal.
+4. FL01 crea otra copia independiente en la biblioteca de validación, ubicada en el subsitio de gestión.
+5. La biblioteca de documentos derivados proporciona acceso de solo lectura a los usuarios autorizados del sitio principal, incluidos el personal externo, Site Members y Site Owners.
+6. La biblioteca de validación aplica su propio modelo de permisos restringidos para la validación interna y el procesamiento posterior.
 
-FL01 performs the initial document distribution:
+La biblioteca de documentos derivados no depende de FL02 ni de un flujo de publicación adicional para recibir la copia inicial.
 
-1. An authorized user creates a request and attaches an Excel workbook.
-2. FL01 retrieves the Excel attachment from the Request Intake List.
-3. FL01 creates a document copy in the Derived Documents Library, located in the Main SharePoint Site.
-4. FL01 creates a separate copy in the Validation Library, located in the Management Subsite.
-5. The Derived Documents Library provides read-only access to authorized Main Site users, including external staff, Site Members, and Site Owners.
-6. The Validation Library follows its own restricted permission model for internal validation and subsequent processing.
+Las dos copias tienen finalidades diferentes y siguen requisitos de control de acceso independientes.
 
-The Derived Documents Library does not depend on FL02 or a separate publication workflow to receive the initial document copy.
+## 6. Permisos
 
-The two document copies serve different purposes and follow independent access-control requirements.
+La biblioteca utiliza un modelo de acceso de solo lectura para los usuarios ordinarios.
 
-## 6. Permissions
-
-The library uses a read-only access model for ordinary users.
-
-
-| Role | Access |
+| Rol | Acceso |
 |---|---|
-| Site Collection Administrators | Administrative control |
-| Site Owners | Read |
-| Site Members | Read |
-| Authorized External Staff | Read |
-| Unauthorized Users | No access |
-| Authorized Automation Connection | Permissions required to create and manage document copies |
+| Administradores de la colección de sitios | Control administrativo |
+| Site Owners | Lectura |
+| Site Members | Lectura |
+| Personal externo autorizado | Lectura |
+| Usuarios no autorizados | Sin acceso |
+| Conexión de automatización autorizada | Permisos necesarios para crear y administrar copias documentales |
 
+El permiso de lectura permite abrir y descargar documentos sin conceder derechos de edición.
 
-Read access allows users to open and download documents without granting editing rights.
+La configuración efectiva de permisos debe validarse en el entorno de destino.
 
-The effective permission configuration must be validated in the target environment.
+## 7. Arquitectura de seguridad
 
-## 7. Security Architecture
+La biblioteca de documentos derivados se encuentra en el sitio principal porque permite la consulta documental autorizada.
 
-The Derived Documents Library is located in the Main SharePoint Site because it supports authorized document consultation.
+No debe exponer los recursos internos del subsitio de gestión.
 
-It must not expose internal resources from the Management Subsite.
+Los requisitos de seguridad incluyen:
 
-Security requirements include:
+- Restringir la modificación de documentos.
+- Conceder acceso únicamente a los usuarios autorizados.
+- Impedir el acceso a los registros internos de procesamiento.
+- Evitar la exposición de documentos de validación.
+- Aplicar el principio de mínimo privilegio.
+- Revisar los accesos cuando los documentos contengan información sensible.
 
-- Restricting document modification.
-- Granting access only to authorized users.
-- Preventing access to internal processing logs.
-- Avoiding exposure of validation documents.
-- Applying least-privilege permissions.
-- Reviewing access when documents contain sensitive information.
+Si distintos usuarios deben acceder a documentos diferentes, puede ser necesario establecer permisos adicionales a nivel de documento.
 
-If different users must access different documents, additional document-level permissions may be required.
+Esta decisión corresponde a la implementación y no se presupone en la demostración actual.
 
-This is an implementation decision and is not assumed to be part of the current demonstration.
-
-
-## 8. Document Access Workflow
+## 8. Flujo de acceso a documentos
 
 ```mermaid
 flowchart TD
-    A[User submits Request Intake item]
-    B[Excel workbook attached]
-    C[FL01 - Request Intake Automation]
-    D[Derived Documents Library - Main Site]
-    E[Validation Library - Management Subsite]
-    F[Authorized Main Site users]
-    G[Internal validation and processing]
-    H[Read or Download Document]
+    A[Usuario presenta una solicitud]
+    B[Libro de Excel adjunto]
+    C[FL01 - Automatización de recepción]
+    D[Biblioteca de documentos derivados - Sitio principal]
+    E[Biblioteca de validación - Subsitio de gestión]
+    F[Usuarios autorizados del sitio principal]
+    G[Validación y procesamiento internos]
+    H[Consultar o descargar documento]
 
     A --> B
     B --> C
@@ -135,116 +127,113 @@ flowchart TD
     E --> G
 ```
 
-FL01 creates two independent copies of the Excel attachment.
+FL01 crea dos copias independientes del adjunto Excel.
 
-- **Derived Documents Library:** Provides read-only access to authorized Main Site users, including external staff, Site Members, and Site Owners.
-- **Validation Library:** Stores the separate copy used for internal validation and subsequent processing.
+- **Biblioteca de documentos derivados:** ofrece acceso de solo lectura a los usuarios autorizados del sitio principal, incluidos el personal externo, Site Members y Site Owners.
+- **Biblioteca de validación:** almacena la copia independiente utilizada para la validación interna y el procesamiento posterior.
 
-The Derived Documents Library receives its copy directly from FL01. No additional publication workflow is required.
+La biblioteca de documentos derivados recibe su copia directamente de FL01. No es necesario un flujo de publicación adicional.
 
-## 9. Document Organization
+## 9. Organización documental
 
-The library can use SharePoint metadata and views to improve document navigation.
+La biblioteca puede utilizar metadatos y vistas de SharePoint para facilitar la navegación.
 
-Possible configuration options include:
+Entre las posibles opciones de configuración se incluyen:
 
-- Document type.
-- Creation date.
-- Request reference.
-- Processing reference.
-- Document status.
-- Custom views.
-- File naming conventions.
+- Tipo de documento.
+- Fecha de creación.
+- Referencia de la solicitud.
+- Referencia del procesamiento.
+- Estado del documento.
+- Vistas personalizadas.
+- Convenciones para nombrar archivos.
 
-These are optional configuration examples.
+Estas opciones son ejemplos de configuración opcionales.
 
-The exact metadata structure must be defined according to the implementation requirements.
+La estructura exacta de metadatos debe definirse según los requisitos de la implementación.
 
-## 10. User Experience
+## 10. Experiencia de usuario
 
-The library should provide a simple and consistent consultation experience.
+La biblioteca debe ofrecer una experiencia de consulta sencilla y coherente.
 
-Recommended design considerations include:
+Entre las recomendaciones de diseño se incluyen:
 
-- Clear document names.
-- Useful metadata columns.
-- Simplified library views.
-- Appropriate filtering and sorting.
-- Read-only access for ordinary users.
-- Consistent navigation from the Main SharePoint Site.
+- Nombres de documento claros.
+- Columnas de metadatos útiles.
+- Vistas de biblioteca simplificadas.
+- Filtros y ordenación adecuados.
+- Acceso de solo lectura para usuarios ordinarios.
+- Navegación coherente desde el sitio principal.
 
-SharePoint JSON formatting may be used to customize the interface.
+Puede utilizarse formato JSON de SharePoint para personalizar la interfaz.
 
-However, interface customization does not replace SharePoint permission management.
+No obstante, la personalización visual no sustituye la gestión de permisos de SharePoint.
 
+## 11. Integración con Power Automate
 
-## 11. Integration with Power Automate
+La biblioteca de documentos derivados forma parte de la solución global de Power Automate.
 
-The Derived Documents Library is integrated with the broader Power Automate solution.
+### FL01 - Recepción de solicitudes
 
-### FL01 - Request Intake
+FL01 se inicia cuando se presenta una nueva solicitud en la lista de recepción de solicitudes con un libro de Excel adjunto.
 
-FL01 starts when a new request is submitted through the Request Intake List with an attached Excel workbook.
+El flujo recupera el adjunto y crea dos copias documentales independientes:
 
-The workflow retrieves the attachment and creates two separate document copies:
+- Una copia en la biblioteca de documentos derivados, ubicada en el sitio principal.
+- Una copia en la biblioteca de validación, ubicada en el subsitio de gestión.
 
-- One copy in the Derived Documents Library, located in the Main SharePoint Site.
-- One copy in the Validation Library, located in the Management Subsite.
+La biblioteca de documentos derivados proporciona acceso de solo lectura a los usuarios autorizados del sitio principal, incluidos el personal externo, Site Members y Site Owners.
 
-The Derived Documents Library provides read-only access to authorized Main Site users, including external staff, Site Members, and Site Owners.
+No se requiere ningún flujo adicional de publicación documental.
 
-No additional document publication workflow is required.
+### FL02 - Procesamiento de Excel
 
-### FL02 - Excel Processing
+FL02 procesa los libros de Excel validados de la biblioteca de validación del subsitio de gestión.
 
-FL02 processes validated Excel workbooks from the Management Subsite Validation Library.
+Crea registros de SharePoint y genera libros de exportación sin modificar la copia almacenada en la biblioteca de documentos derivados.
 
-It creates SharePoint records and generates export workbooks without modifying the document copy stored in the Derived Documents Library.
+### FL04 - Registros de ejecución
 
-### FL04 - Processing Logs
+FL04 registra información sobre las ejecuciones de procesamiento en el subsitio de gestión.
 
-FL04 records processing execution information in the Management Subsite.
+### FL05 - Permisos de registros
 
-### FL05 - Record Permissions
+FL05 aplica permisos basados en centros a los registros procesados del subsitio de gestión.
 
-FL05 applies center-based permissions to processed records in the Management Subsite.
+La biblioteca de documentos derivados mantiene su propio modelo de acceso de solo lectura y no hereda los permisos a nivel de registro administrados por FL05.
 
-The Derived Documents Library follows its own read-only access model and does not inherit the record-level permissions managed by FL05.
+## 12. Consideraciones de seguridad y gobernanza
 
+- Utilizar los permisos de SharePoint para controlar el acceso.
+- Validar los permisos efectivos de solo lectura de Site Owners, Site Members y personal externo autorizado después de que FL01 cree la copia documental.
+- Restringir las modificaciones a identidades autorizadas.
+- Evitar compartir documentos confidenciales mediante enlaces sin restricciones.
+- Revisar los requisitos de conservación documental.
+- Considerar el historial de versiones cuando corresponda.
+- Auditar el acceso a los documentos según los requisitos de la organización.
+- No publicar direcciones URL de producción ni información de configuración sensible en repositorios públicos.
 
-## 12. Security and Governance Considerations
+## 13. Documentación relacionada
 
-- Use SharePoint permissions to enforce access.
-- Validate effective read-only permissions for Site Owners, Site Members, and authorized External Staff after FL01 creates the document copy.
-- Restrict modification to authorized identities.
-- Avoid sharing confidential documents through unrestricted links.
-- Review document retention requirements.
-- Consider version history where appropriate.
-- Audit document access according to organizational requirements.
-- Do not publish production URLs or sensitive configuration details in public repositories.
+- [Sitio principal de SharePoint](../sites/main-site.md)
+- [Lista de recepción de solicitudes](../lists/request-intake.md)
+- [Subsitio de gestión](../sites/management-subsite.md)
+- [Biblioteca de validación](validation-library.md)
+- [Biblioteca de exportaciones](export-library.md)
+- [Arquitectura de sitios de SharePoint](../architecture/sites-architecture.md)
+- [Descripción general de SharePoint](../README.md)
 
-## 13. Related Documentation
+## 14. Estado de la documentación
 
-- [Main SharePoint Site](../sites/main-site.md)
-- [Request Intake List](../lists/request-intake.md)
-- [Management Subsite](../sites/management-subsite.md)
-- [Validation Library](validation-library.md)
-- [Export Library](export-library.md)
-- [SharePoint Sites Architecture](../architecture/sites-architecture.md)
-- [SharePoint Overview](../README.md)
+**Estado:** Documentación conceptual de la biblioteca completada.
 
-## 14. Documentation Status
+Los siguientes detalles de implementación siguen siendo configurables:
 
-**Status:** Conceptual library documentation complete.
+- Configuración de la conexión de FL01 y detalles de ejecución de la copia documental.
+- Columnas de metadatos de la biblioteca.
+- Convenciones de nomenclatura de documentos.
+- Permisos de usuarios y grupos.
+- Políticas de conservación documental.
+- Vistas de biblioteca y formato de la interfaz.
 
-The following implementation details remain configurable:
-
-
-- FL01 connection configuration and document-copy execution details.
-- Library metadata columns.
-- Document naming conventions.
-- User and group permissions.
-- Document retention policies.
-- Library views and interface formatting.
-
-This document is not an automated SharePoint library provisioning template.
+Este documento no es una plantilla automatizada para aprovisionar bibliotecas de SharePoint.
