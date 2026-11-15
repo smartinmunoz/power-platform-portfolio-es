@@ -1,77 +1,41 @@
-# Documentación técnica
+# Office Scripts
 
-Este directorio sirve como índice de la documentación técnica del proyecto de demostración de automatización de SharePoint y Excel.
+Esta carpeta contiene dos Office Scripts desarrollados para una demostración ficticia de automatización de SharePoint y Excel.
 
-El proyecto presenta una solución conceptual de Microsoft Power Platform que integra Power Automate, SharePoint Online, Excel Online y Office Scripts.
+## Scripts disponibles
 
-Todos los recursos utilizan datos ficticios y configuraciones genéricas.
+### process-records.ts
 
-## Arquitectura de la solución
+Lee los registros de la hoja de cálculo `Input`.
 
-La solución incluye cinco flujos conceptuales de Power Automate, dos Office Scripts y una estructura de SharePoint documentada.
+- Detecta dinámicamente los encabezados de las columnas.
+- Extrae los registros del rango utilizado.
+- Omite las filas completamente vacías.
+- Devuelve los registros extraídos como una cadena JSON.
 
-### Arquitectura de SharePoint
+### populate-export-template.ts
 
-- [Descripción general de SharePoint](../Sharepoint/README.md)
-- [Arquitectura de sitios](../Sharepoint/architecture/sites-architecture.md)
-- [Sitio principal](../Sharepoint/sites/main-site.md)
-- [Subsitio de gestión](../Sharepoint/sites/management-subsite.md)
+Rellena una plantilla de exportación de Excel existente.
 
-### Flujos de Power Automate
+- Recibe los registros mediante un parámetro de tipo cadena JSON.
+- Utiliza la hoja de cálculo `Export`.
+- Escribe los campos seleccionados a partir de la celda B15.
+- Conserva los encabezados predefinidos de la plantilla.
+- Devuelve el número de registros escritos.
 
-| Flujo | Descripción | Documentación |
-|---|---|---|
-| FL01 | Recepción de documentos y gestión de permisos | [FL01](../flows/FL01-demo/README.md) |
-| FL02 | Procesamiento de Excel y creación de registros en SharePoint | [FL02](../flows/FL02-demo/README.md) |
-| FL03 | Limpieza programada de archivos temporales | [FL03](../flows/FL03-demo/README.md) |
-| FL04 | Registro centralizado de ejecuciones de procesamiento | [FL04](../flows/FL04-demo/README.md) |
-| FL05 | Permisos dinámicos a nivel de registro | [FL05](../flows/FL05-demo/README.md) |
+## Archivos de ejemplo
 
-Estos flujos son demostraciones conceptuales, no definiciones de flujos importables directamente en Power Automate.
+Ambos scripts se pueden probar con los archivos de la carpeta `sample-data`:
 
-### Office Scripts
+- `sample-records.xlsx`
+- `export-template.xlsx`
 
-- [Procesamiento de registros de Excel](../office-scripts/process-records.ts)
-- [Cumplimentación de la plantilla de exportación](../office-scripts/populate-export-template.ts)
+## Integración con Power Automate
 
-Los scripts muestran cómo extraer datos de Excel y rellenar un libro de exportación.
+Power Automate orquesta el proceso, crea el libro de exportación a partir de una plantilla y transmite los datos de los registros entre los scripts.
 
-### Datos de ejemplo
+La demostración utiliza una estructura de datos simplificada y registros ficticios.
 
-- [Registros de ejemplo](../sample-data/sample-records.xlsx)
-- [Plantilla de exportación](../sample-data/export-template.xlsx)
-- [Documentación de los datos de ejemplo](../sample-data/README.md)
+## Seguridad
 
-### Componentes de SharePoint
-
-La solución de SharePoint documentada incluye:
-
-- Cuatro bibliotecas de documentos.
-- Cuatro listas de SharePoint.
-- Un ejemplo de configuración de formulario.
-- Dos ejemplos de formato JSON.
-- Documentación sobre la estructura de sitios y los permisos.
-
-Consulta la [documentación de SharePoint](../Sharepoint/README.md) para conocer los detalles de cada componente.
-
-## Alcance de la implementación
-
-Este repositorio documenta una arquitectura de referencia ficticia.
-
-Los archivos JSON de Power Automate describen estructuras conceptuales de flujos y no se pueden importar directamente en Power Automate.
-
-Los Office Scripts se proporcionan como ejemplos en TypeScript.
-
-Una implantación en producción requeriría configuración específica del entorno, autenticación de conectores, permisos, pruebas e implementación de las acciones reales de Power Automate.
-
-## Seguridad y privacidad
-
-- Registros e identificadores ficticios.
-- Configuraciones genéricas de SharePoint.
-- Sin información corporativa real.
-- Sin credenciales ni secretos.
-- Sin exportaciones de soluciones propietarias.
-
-## Descripción general del proyecto
-
-Volver al [README principal del proyecto](../README.md).
+No se incluye código corporativo, credenciales, direcciones URL internas ni información confidencial.
