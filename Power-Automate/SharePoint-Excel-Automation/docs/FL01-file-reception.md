@@ -16,17 +16,17 @@ El flujo se inicia al crear un elemento nuevo con un archivo Excel adjunto en un
 
 1. Detectar el elemento de lista de SharePoint recién creado.
 2. Recuperar el archivo Excel adjunto.
-3. Crear una copia en una biblioteca de documentos protegida.
-4. Configurar los permisos de acceso de la copia protegida.
-5. Crear una segunda copia en una biblioteca de documentos de validación.
+3. Crear una copia en la biblioteca de documentos derivados del sitio principal.
+4. Configurar los permisos de acceso de la copia de documentos derivados.
+5. Crear una segunda copia en la biblioteca de validación del subsitio de gestión.
 6. Configurar los permisos de los usuarios autorizados para revisar y validar el archivo.
 7. Actualizar los metadatos de SharePoint y la información de procesamiento pertinentes.
 
 ## Bibliotecas de documentos
 
-### Biblioteca protegida
+### Biblioteca de documentos derivados
 
-Almacena una copia protegida del archivo Excel presentado.
+Almacena una copia protegida del archivo Excel presentado en el sitio principal.
 
 Solo el administrador del sitio de SharePoint está autorizado a modificar estos archivos.
 
