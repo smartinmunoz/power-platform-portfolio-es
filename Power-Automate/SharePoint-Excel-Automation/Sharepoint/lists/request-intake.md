@@ -1,268 +1,258 @@
+# Lista de recepción de solicitudes
 
-# Request Intake List
+## 1. Descripción general
 
-## 1. Overview
+La lista de recepción de solicitudes (*Request Intake List*) es una lista de SharePoint Online ubicada en el sitio principal de SharePoint.
 
-The Request Intake List is a SharePoint Online list located in the Main SharePoint Site.
+Proporciona una interfaz sencilla para que el personal externo autorizado presente documentos Excel destinados a su posterior validación y procesamiento automatizado.
 
-It provides a simple interface for authorized external staff to submit Excel documents for subsequent validation and automated processing.
+La solución busca reducir la introducción manual de datos y simplificar la presentación de solicitudes.
 
-The solution is designed to minimize manual data entry and simplify the submission process.
+> **Aviso sobre el portfolio:** Esta documentación describe una demostración ficticia. No incluye direcciones URL de producción, identificadores reales, credenciales ni información empresarial confidencial.
 
-> **Portfolio disclaimer:** This documentation describes a fictionalized demonstration. No production URLs, real identifiers, credentials, or confidential business information are included.
+## 2. Configuración de la lista
 
-## 2. List Configuration
-
-| Property | Configuration |
+| Propiedad | Configuración |
 |---|---|
-| List Name | Request Intake |
-| Location | Main SharePoint Site |
-| List Type | SharePoint Online List |
-| Attachments | Enabled |
-| User Interface | Customized SharePoint form |
-| Automation | Power Automate |
-| Primary Purpose | Excel document submission |
+| Nombre de la lista | `Request Intake` |
+| Ubicación | Sitio principal de SharePoint |
+| Tipo de lista | Lista de SharePoint Online |
+| Archivos adjuntos | Habilitados |
+| Interfaz de usuario | Formulario personalizado de SharePoint |
+| Automatización | Power Automate |
+| Finalidad principal | Presentación de documentos Excel |
 
-The list uses standard SharePoint capabilities and JSON-based user interface customization.
+La lista utiliza funcionalidades estándar de SharePoint y personalizaciones de interfaz basadas en JSON.
 
-## 3. List Columns
+## 3. Columnas de la lista
 
-The submission form requires only one custom field and the standard SharePoint attachment functionality.
+El formulario de presentación solo requiere un campo personalizado y la funcionalidad estándar de archivos adjuntos de SharePoint.
 
-| Field | Type | Purpose |
+| Campo | Tipo | Finalidad |
 |---|---|---|
-| Observations | Multiple lines of text | Optional comments or information provided by the requester |
-| Attachments | SharePoint list attachments | Upload the Excel document to be processed |
+| `Observations` | Varias líneas de texto | Comentarios o información opcional proporcionada por la persona solicitante |
+| `Attachments` | Archivos adjuntos de lista de SharePoint | Cargar el documento Excel que se procesará |
 
-The solution also uses standard SharePoint system fields.
+La solución también utiliza campos estándar del sistema de SharePoint.
 
-| System Field | Purpose |
+| Campo del sistema | Finalidad |
 |---|---|
-| ID | Unique SharePoint list item identifier |
-| Created | Date and time of submission |
-| Created By | User who created the request |
-| Modified | Date and time of the latest modification |
-| Modified By | User who last modified the request |
+| `ID` | Identificador único del elemento de la lista |
+| `Created` | Fecha y hora de presentación |
+| `Created By` | Usuario que creó la solicitud |
+| `Modified` | Fecha y hora de la última modificación |
+| `Modified By` | Usuario que realizó la última modificación |
 
-The default Title column may exist in the underlying SharePoint list but is not required as a user-entered field in this demonstration.
+La columna predeterminada `Title` puede existir en la lista subyacente de SharePoint, pero en esta demostración no es necesario que el usuario la cumplimente.
 
-## 4. Request Submission Process
+## 4. Proceso de presentación de solicitudes
 
-The user follows a simple submission process:
+El usuario sigue un proceso sencillo:
 
-1. Opens the Request Intake List.
-2. Selects the option to create a new request.
-3. Enters observations when necessary.
-4. Attaches the Excel workbook.
-5. Saves the request.
+1. Abre la lista de recepción de solicitudes.
+2. Selecciona la opción para crear una solicitud nueva.
+3. Introduce observaciones cuando sea necesario.
+4. Adjunta el libro de Excel.
+5. Guarda la solicitud.
 
-The submitted item and its attachment become available to the configured Power Automate workflow.
+El elemento creado y su archivo adjunto quedan disponibles para el flujo de Power Automate configurado.
 
+## 5. Formulario personalizado de SharePoint
 
-## 5. Customized SharePoint Form
+La lista utiliza personalización de formularios mediante JSON para ofrecer una interfaz simplificada de presentación de documentos Excel.
 
-The Request Intake List uses SharePoint JSON form customization to provide a simplified interface for submitting Excel documents.
+El formulario se organiza alrededor de dos campos:
 
-The form is designed around two fields:
+- **Observaciones:** campo opcional de varias líneas de texto para proporcionar información adicional.
+- **Archivos adjuntos:** funcionalidad estándar de SharePoint para adjuntar libros Excel a los elementos de la lista.
 
-- **Observations:** An optional multiple-lines-of-text field where users can provide additional information.
-- **Attachments:** The standard SharePoint list attachment functionality used to upload Excel workbooks.
+### Configuración del formulario
 
-### Form Configuration
+El archivo JSON de demostración está disponible en el repositorio:
 
-The demonstration JSON configuration is available in the repository:
+[Ver JSON del formulario de recepción de solicitudes](../forms/request-intake-form.json)
 
-[View Request Intake Form JSON](../forms/request-intake-form.json)
+La configuración organiza la información de la solicitud en una sección denominada `Request Information`.
 
-The form configuration organizes the request information into a section named "Request Information".
+Este ejemplo es conceptual. El comportamiento del control nativo de archivos adjuntos dentro del diseño JSON del formulario debe comprobarse en un entorno de demostración.
 
-The example is conceptual. The behavior of the native SharePoint attachment control within the JSON form layout must be verified in a demonstration environment.
+### Personalización del formulario y de la barra de comandos
 
-### Form and Command Bar Customization
+La personalización del formulario y el formato de la barra de comandos cumplen funciones diferentes:
 
-SharePoint form customization and command bar formatting serve different purposes:
+- **JSON del formulario:** define la disposición y organización del formulario de solicitud.
+- **JSON de la barra de comandos:** personaliza los comandos disponibles en la lista y su presentación.
+- **Permisos de SharePoint:** controlan qué usuarios pueden crear, leer, editar o administrar elementos de la lista.
 
-- **Form JSON:** Defines the layout and organization of the request form.
-- **Command Bar JSON:** Customizes the available list commands and their presentation.
-- **SharePoint Permissions:** Control which users can create, read, edit, or manage list items.
+La personalización de la interfaz mediante JSON no sustituye los permisos de seguridad de SharePoint ni la validación del lado del servidor.
 
-JSON interface customization does not replace SharePoint security permissions or server-side validation.
+## 6. Personalización de la barra de comandos
 
+La lista utiliza formato JSON para simplificar las acciones disponibles en la barra de comandos.
 
-## 6. Command Bar Customization
+La configuración de demostración se encuentra en:
 
-The Request Intake List uses JSON command bar formatting to simplify the available actions.
+[Ver JSON de la barra de comandos de recepción de solicitudes](../formatting/request-intake-view.json)
 
-The existing demonstration configuration is available at:
+La personalización puede cambiar el nombre de los comandos u ocultarlos para mejorar la experiencia del usuario.
 
-[Request Intake Command Bar JSON](../formatting/request-intake-view.json)
+**Importante:** Ocultar comandos mediante formato JSON no impide que los usuarios realicen acciones para las que sigan teniendo permisos en SharePoint.
 
-The customization may rename or hide commands to improve the user experience.
+## 7. Gestión de archivos adjuntos
 
-**Important:** Hiding commands through JSON formatting does not prevent users from performing actions for which they retain SharePoint permissions.
+La lista utiliza la funcionalidad estándar de archivos adjuntos de SharePoint.
 
-## 7. Attachment Handling
+El formato documental previsto es Excel.
 
-The list uses the standard SharePoint attachment functionality.
+El flujo de Power Automate se encarga de recuperar y procesar el archivo adjunto presentado.
 
-The intended document format is Excel.
+Las validaciones de archivos adjuntos, incluidos el tipo de archivo, la cantidad de archivos y la estructura del contenido, deben implementarse por separado cuando sean necesarias.
 
-The Power Automate workflow is responsible for retrieving and processing the submitted attachment.
+La presencia de un campo de archivos adjuntos no restringe automáticamente las cargas a documentos Excel.
 
-Attachment-related validation, including file type, file count, and content structure, must be implemented separately if required.
+## 8. Permisos y seguridad
 
-The presence of an attachment field does not automatically enforce Excel-only uploads.
+La lista se encuentra en el sitio principal de SharePoint y permite al personal externo autorizado presentar documentos Excel para su procesamiento.
 
+### Permisos de presentación de solicitudes
 
-## 8. Permissions and Security
+El personal externo debe disponer de los permisos de SharePoint necesarios para crear elementos de solicitud y cargar archivos adjuntos.
 
-The Request Intake List is located in the Main SharePoint Site and allows authorized External Staff to submit Excel documents for processing.
+El formulario personalizado simplifica la presentación, pero no controla los permisos subyacentes de SharePoint.
 
-### Request Submission Permissions
+### Permisos de los elementos de solicitud
 
-External Staff must have the necessary SharePoint permissions to create request items and upload attachments.
+FL01 aplica permisos a nivel de elemento para proteger cada solicitud presentada.
 
-The customized form provides a simplified submission interface but does not control the underlying SharePoint permissions.
+El modelo conceptual de permisos es el siguiente:
 
-### Request Item Permissions
-
-FL01 applies item-level permissions to protect each submitted request.
-
-The conceptual permission model is:
-
-| Role | Access |
+| Rol | Acceso |
 |---|---|
-| Site Collection Administrators | Administrative control |
-| Request Creator | Read |
-| Site Owners | Read |
-| Site Members | Read |
-| Other External Staff | No access |
-| Center Groups | No access |
+| Administradores de la colección de sitios | Control administrativo |
+| Persona que creó la solicitud | Lectura |
+| Site Owners | Lectura |
+| Site Members | Lectura |
+| Resto del personal externo | Sin acceso |
+| Grupos de centros | Sin acceso |
 
-After submission, FL01 breaks permission inheritance for the request item and assigns the required Read permissions.
+Tras la presentación, FL01 interrumpe la herencia de permisos del elemento y asigna los permisos de lectura necesarios.
 
-The Request Creator can consult the submitted request without receiving ordinary editing permissions.
+La persona que creó la solicitud puede consultarla sin recibir permisos ordinarios de edición.
 
-Site Owners and Site Members can consult submitted requests according to the configured security model.
+Site Owners y Site Members pueden consultar las solicitudes presentadas según el modelo de seguridad configurado.
 
-### Attachment Security
+### Seguridad de los archivos adjuntos
 
-Excel attachments belong to their corresponding SharePoint list item and must be protected through the item's effective permissions.
+Los archivos Excel adjuntos pertenecen al elemento de lista correspondiente y deben protegerse mediante sus permisos efectivos.
 
-FL01 retrieves the submitted Excel attachment using an appropriately authorized SharePoint connection.
+FL01 recupera el archivo Excel adjunto mediante una conexión de SharePoint debidamente autorizada.
 
-The workflow creates separate document copies in:
+El flujo crea copias documentales independientes en:
 
-- The Derived Documents Library in the Main SharePoint Site.
-- The Validation Library in the Management Subsite.
+- La biblioteca de documentos derivados del sitio principal de SharePoint.
+- La biblioteca de validación del subsitio de gestión.
 
-Each destination applies its own security model.
+Cada destino aplica su propio modelo de seguridad.
 
-### Security Considerations
+### Consideraciones de seguridad
 
-- Apply the principle of least privilege.
-- Ensure that External Staff can submit requests without accessing other users' request items.
-- Verify that item-level permission inheritance is correctly broken.
-- Prevent unauthorized modification of submitted requests.
-- Validate effective permissions for users belonging to multiple SharePoint groups.
-- Do not rely on JSON form or command bar customization to enforce security.
-- Test the complete submission and permission assignment process in a controlled SharePoint environment.
+- Aplicar el principio de mínimo privilegio.
+- Garantizar que el personal externo pueda presentar solicitudes sin acceder a las de otros usuarios.
+- Comprobar que la herencia de permisos se interrumpe correctamente a nivel de elemento.
+- Impedir modificaciones no autorizadas de las solicitudes presentadas.
+- Validar los permisos efectivos de usuarios pertenecientes a varios grupos de SharePoint.
+- No utilizar la personalización JSON del formulario o de la barra de comandos como mecanismo de seguridad.
+- Probar el proceso completo de presentación y asignación de permisos en un entorno controlado de SharePoint.
 
+## 9. Integración con Power Automate
 
+La lista de recepción de solicitudes es el punto de entrada de la solución de procesamiento documental automatizado.
 
-## 9. Power Automate Integration
+FL01 se inicia cuando se crea un elemento de solicitud en el sitio principal de SharePoint.
 
-The Request Intake List is the entry point for the automated document processing solution.
+### FL01: recepción y distribución de documentos
 
-FL01 starts when a new request item is created in the Main SharePoint Site.
+El flujo sigue esta secuencia conceptual:
 
-### FL01 - Document Intake and Distribution
+1. Un usuario autorizado crea una solicitud en la lista de recepción de solicitudes.
+2. Introduce observaciones opcionales y adjunta un libro de Excel.
+3. SharePoint crea el elemento de solicitud y le asigna un `ID` único.
+4. FL01 recupera la información de la solicitud y su archivo Excel adjunto.
+5. FL01 crea una copia en la biblioteca de documentos derivados del sitio principal de SharePoint.
+6. FL01 crea otra copia en la biblioteca de validación del subsitio de gestión.
+7. FL01 aplica los permisos correspondientes y actualiza los metadatos necesarios de la solicitud y los documentos.
 
-The workflow follows this conceptual sequence:
+### Destinos de los documentos
 
-1. An authorized user creates a request in the Request Intake List.
-2. The user enters optional observations and attaches an Excel workbook.
-3. SharePoint creates the request item and assigns its unique item ID.
-4. FL01 retrieves the request information and its Excel attachment.
-5. FL01 creates a document copy in the Derived Documents Library in the Main SharePoint Site.
-6. FL01 creates a separate document copy in the Validation Library in the Management Subsite.
-7. FL01 applies the corresponding permissions and updates the required request and document metadata.
-
-### Document Destinations
-
-| Destination | Location | Purpose |
+| Destino | Ubicación | Finalidad |
 |---|---|---|
-| Derived Documents Library | Main SharePoint Site | Read-only consultation by authorized main-site users, including External Staff |
-| Validation Library | Management Subsite | Internal document validation by authorized Site Owners and Site Members |
+| Biblioteca de documentos derivados | Sitio principal de SharePoint | Consulta de solo lectura por usuarios autorizados del sitio principal, incluido el personal externo |
+| Biblioteca de validación | Subsitio de gestión | Validación documental interna por Site Owners y Site Members autorizados |
 
-The two document copies serve different purposes and have different access permissions.
+Las dos copias documentales tienen finalidades distintas y diferentes permisos de acceso.
 
-### Subsequent Processing
+### Procesamiento posterior
 
-Once the document is validated in the Validation Library, FL02 starts the Excel processing workflow.
+Una vez validado el documento en la biblioteca de validación, FL02 inicia el flujo de procesamiento de Excel.
 
-The overall solution also includes:
+La solución también incluye:
 
-- FL03 for temporary file cleanup.
-- FL04 for processing logs.
-- FL05 for dynamic center-based record permissions.
+- FL03 para la limpieza de archivos temporales.
+- FL04 para el registro de ejecuciones.
+- FL05 para la asignación dinámica de permisos por centro a los registros.
 
-The detailed workflow logic is documented in the Power Automate section of the portfolio.
+La lógica detallada de los flujos se documenta en la sección de Power Automate del portfolio.
 
-### Security Considerations
+### Consideraciones de seguridad
 
-FL01 must use an appropriately authorized SharePoint connection to create document copies and manage permissions.
+FL01 debe utilizar una conexión de SharePoint debidamente autorizada para crear copias documentales y administrar permisos.
 
-External Staff must not receive access to the restricted Validation Library in the Management Subsite.
+El personal externo no debe obtener acceso a la biblioteca de validación restringida del subsitio de gestión.
 
-The Derived Documents Library provides read-only access to authorized users of the Main SharePoint Site.
+La biblioteca de documentos derivados proporciona acceso de solo lectura a los usuarios autorizados del sitio principal de SharePoint.
 
-The request item and its attachments must remain protected through SharePoint permissions.
+El elemento de solicitud y sus archivos adjuntos deben permanecer protegidos mediante permisos de SharePoint.
 
+## 10. Ejemplo de presentación
 
-## 10. Example Submission
+El siguiente ejemplo utiliza información ficticia.
 
-The following example uses fictional information.
-
-| Field | Example |
+| Campo | Ejemplo |
 |---|---|
-| Observations | Monthly data submission for review |
-| Attachment | sample-request.xlsx |
+| `Observations` | Envío mensual de datos para revisión |
+| Archivo adjunto | `sample-request.xlsx` |
 
-The example demonstrates the intended user experience without using real business information.
+El ejemplo muestra la experiencia de usuario prevista sin utilizar información empresarial real.
 
-## 11. Related Documentation
+## 11. Documentación relacionada
 
-- [Main SharePoint Site](../sites/main-site.md)
-- [SharePoint Sites Architecture](../architecture/sites-architecture.md)
-- [SharePoint Overview](../README.md)
-- [Request Intake Command Bar JSON](../formatting/request-intake-view.json)
+- [Sitio principal de SharePoint](../sites/main-site.md)
+- [Arquitectura de sitios de SharePoint](../architecture/sites-architecture.md)
+- [Descripción general de SharePoint](../README.md)
+- [JSON de la barra de comandos de recepción de solicitudes](../formatting/request-intake-view.json)
 
+## 12. Estado de la documentación
 
-## 12. Documentation Status
+**Estado:** documentación conceptual de la lista completada.
 
-**Status:** Conceptual list documentation complete.
+Se han documentado los siguientes componentes:
 
-The following components are documented:
+- Estructura y configuración de la lista de recepción de solicitudes.
+- Campo `Observations` y archivos adjuntos estándar de SharePoint.
+- JSON del formulario personalizado para crear elementos.
+- Formato JSON de la barra de comandos.
+- Proceso de presentación de solicitudes.
+- Integración con Power Automate FL01.
+- Consideraciones generales de seguridad y permisos.
 
-- Request Intake List structure and configuration.
-- Observations field and standard SharePoint attachments.
-- Customized New Item form JSON.
-- Command bar JSON formatting.
-- Request submission process.
-- Integration with Power Automate FL01.
-- General security and permission considerations.
+### Validación de la implementación
 
-### Implementation Validation
+Los siguientes aspectos requieren validación o configuración en un entorno de SharePoint de destino:
 
-The following aspects require validation or configuration in a target SharePoint environment:
+- Comportamiento del control nativo de archivos adjuntos dentro del formulario JSON personalizado.
+- Permisos efectivos a nivel de lista y elemento.
+- Reglas de validación de adjuntos Excel, incluidos el tipo de archivo y la cantidad de archivos.
+- Permisos de las conexiones de Power Automate.
+- Pruebas integrales de la presentación de solicitudes y la ejecución de FL01.
 
-- Native attachment control behavior within the customized JSON form.
-- Effective list-level and item-level permissions.
-- Excel attachment validation rules, including file type and number of attachments.
-- Power Automate connection permissions.
-- End-to-end testing of the request submission and FL01 execution.
-
-The documentation describes a conceptual implementation and does not provide an automated SharePoint list provisioning template.
-
-
+La documentación describe una implementación conceptual y no proporciona una plantilla automatizada de aprovisionamiento de listas de SharePoint.
