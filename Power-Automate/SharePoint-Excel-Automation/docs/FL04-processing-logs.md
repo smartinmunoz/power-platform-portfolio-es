@@ -1,69 +1,68 @@
+# FL04 - Registros de ejecución y seguimiento de errores
 
-# FL04 - Processing Logs and Error Tracking
+## Descripción general
 
-## Overview
+FL04 es un flujo secundario reutilizable de Power Automate encargado de registrar los resultados y errores del procesamiento en SharePoint Online.
 
-FL04 is a reusable Power Automate child flow responsible for recording processing results and errors in SharePoint Online.
+Centraliza los registros de ejecución y proporciona trazabilidad de las operaciones automatizadas de procesamiento de Excel.
 
-It centralizes execution logging and provides traceability for automated Excel processing operations.
+## Desencadenador
 
-## Trigger
+Power Automate: Cuando se llama a un flujo.
 
-Power Automate - When a flow is called.
+FL04 es invocado por el flujo principal (FL02).
 
-FL04 is invoked by the parent workflow (FL02).
+## Parámetros de entrada
 
-## Input Parameters
+El flujo secundario recibe de FL02 información sobre el procesamiento:
 
-The child flow receives processing information from FL02:
+- Identificador de referencia del procesamiento.
+- Nombre del archivo de origen.
+- Número de registros leídos.
+- Número de registros creados.
+- Errores de procesamiento.
+- Identificador de ejecución del flujo.
 
-- Processing reference identifier.
-- Source file name.
-- Number of records read.
-- Number of records created.
-- Processing errors.
-- Flow execution identifier.
+## Proceso principal
 
-## Main Process
+1. Recibir la información de procesamiento de FL02.
+2. Preparar el resumen de ejecución.
+3. Crear una entrada de registro en una lista de SharePoint.
+4. Guardar los resultados del procesamiento y los detalles de los errores.
+5. Conservar el identificador de ejecución para garantizar la trazabilidad.
 
-1. Receive the processing information from FL02.
-2. Prepare the execution summary.
-3. Create a log entry in a SharePoint list.
-4. Store the processing results and error details.
-5. Preserve the execution identifier for traceability.
+## Registro en SharePoint
 
-## SharePoint Logging
+Una lista específica de SharePoint almacena el historial de ejecuciones.
 
-A dedicated SharePoint list stores the execution history.
+Esta información permite:
 
-The information can be used to:
+- Revisar los resultados del procesamiento.
+- Identificar ejecuciones fallidas o incompletas.
+- Investigar errores de procesamiento.
+- Comparar el número de registros leídos y creados.
+- Facilitar la resolución de incidencias y la supervisión operativa.
 
-- Review processing results.
-- Identify failed or incomplete executions.
-- Investigate processing errors.
-- Compare the number of records read and created.
-- Support troubleshooting and operational monitoring.
+## Arquitectura
 
-## Architecture
+FL04 es un flujo secundario de FL02.
 
-FL04 is a child flow of FL02.
+Separar el registro de ejecuciones del flujo principal mejora la modularidad, el mantenimiento y la reutilización.
 
-Separating logging from the main processing workflow improves modularity, maintainability and reusability.
-
-## Technologies
+## Tecnologías
 
 - Power Automate
-- Child flows
+- Flujos secundarios
 - SharePoint Online
 - JSON
-- Error handling
+- Gestión de errores
 
-## Implementation Notes
+## Notas de implementación
 
-The public demonstration uses fictional data and generic SharePoint list structures.
+La demostración pública utiliza datos ficticios y estructuras genéricas de listas de SharePoint.
 
-The source file name and other input parameters must be validated to ensure that logging records contain the expected values.
+El nombre del archivo de origen y los demás parámetros de entrada deben validarse para garantizar que las entradas de registro contienen los valores esperados.
 
-## Security
+## Seguridad
 
-No corporate URLs, tenant identifiers, credentials, personal data or proprietary configurations are included.
+No se incluyen URL corporativas, identificadores de tenant, credenciales, datos personales ni configuraciones propietarias.
