@@ -1,155 +1,143 @@
+# Biblioteca de validación
 
-# Validation Library
+## 1. Descripción general
 
-## 1. Overview
+La biblioteca de validación (*Validation Library*) es una biblioteca de documentos de SharePoint Online ubicada en el subsitio de gestión.
 
-The Validation Library is a SharePoint Online document library located in the Management Subsite.
+Almacena libros de Excel pendientes de validación y procesamiento mediante Power Automate.
 
-It stores Excel workbooks awaiting validation and processing through Power Automate.
+La biblioteca implementa seguridad a nivel de documento para proteger los archivos validados frente a modificaciones no autorizadas.
 
-The library implements document-level security to protect validated files against unauthorized modification.
+> **Aviso sobre el portfolio:** Esta documentación describe una demostración conceptual con nombres ficticios. No incluye direcciones URL de producción, credenciales, identificadores reales ni información confidencial.
 
-> **Portfolio disclaimer:** This documentation describes a conceptual demonstration using fictional names. No production URLs, credentials, real identifiers, or confidential information are included.
+## 2. Configuración de la biblioteca
 
-## 2. Library Configuration
-
-| Property | Configuration |
+| Propiedad | Configuración |
 |---|---|
-| Library Name | Validation Library |
-| Location | Management Subsite |
-| Library Type | SharePoint Document Library |
-| Document Format | Excel workbooks |
-| Processing Workflow | FL02 |
-| Security Model | Library-level and file-level permissions |
-| External Staff Access | Not permitted |
-| Center Groups Access | Not permitted |
+| Nombre de la biblioteca | Validation Library |
+| Ubicación | Subsitio de gestión |
+| Tipo de biblioteca | Biblioteca de documentos de SharePoint |
+| Formato documental | Libros de Excel |
+| Flujo de procesamiento | FL02 |
+| Modelo de seguridad | Permisos a nivel de biblioteca y de archivo |
+| Acceso del personal externo | No permitido |
+| Acceso de los grupos de centros | No permitido |
 
+## 3. Ciclo de vida documental
 
-## 3. Document Lifecycle
+Los documentos llegan a la biblioteca de validación a través de FL01, que se inicia cuando se presenta una nueva solicitud en el sitio principal de SharePoint.
 
-Documents enter the Validation Library through FL01, which starts when a new request is submitted in the Main SharePoint Site.
+El ciclo de vida documental es el siguiente:
 
-The document lifecycle is:
+1. Un usuario autorizado presenta una solicitud con un libro de Excel adjunto mediante la lista de recepción de solicitudes.
+2. FL01 recupera el archivo Excel adjunto.
+3. FL01 crea una copia en la biblioteca de documentos derivados del sitio principal de SharePoint.
+4. FL01 crea otra copia independiente en la biblioteca de validación del subsitio de gestión.
+5. Los Site Owners y Site Members autorizados revisan y validan el documento.
+6. El estado del documento cambia a `Validated`, lo que desencadena FL02.
+7. FL02 interrumpe la herencia de permisos del archivo y concede acceso de lectura a Site Owners y Site Members.
+8. FL02 cambia el estado del documento de `Validated` a `Processing`.
+9. FL02 procesa los datos de Excel, crea registros de SharePoint, genera el libro de exportación y registra los resultados del procesamiento mediante FL04.
+10. FL02 actualiza el estado del documento a `Processed` cuando el procesamiento y el registro de ejecución terminan correctamente, o a `Error` si el procesamiento no puede completarse satisfactoriamente.
 
-1. An authorized user submits a request with an attached Excel workbook through the Request Intake List.
-2. FL01 retrieves the Excel attachment.
-3. FL01 creates a copy in the Derived Documents Library in the Main SharePoint Site.
-4. FL01 creates a separate copy in the Validation Library in the Management Subsite.
-5. Authorized Site Owners and Site Members review and validate the document.
-6. The document status changes to `Validated`, triggering FL02.
-7. FL02 breaks file-level permission inheritance and grants Read access to Site Owners and Site Members.
-8. FL02 updates the document status from `Validated` to `Processing`.
-9. FL02 processes the Excel data, creates SharePoint records, generates the export workbook, and records processing results through FL04.
-10. FL02 updates the document status to `Processed` when processing and logging complete successfully, or to `Error` if processing cannot complete successfully.
+La biblioteca de validación está restringida a los usuarios de gestión autorizados. El personal externo y los grupos de centros no pueden acceder a sus documentos.
 
+El estado `Processing` indica que el documento ha entrado en la fase protegida de procesamiento. No garantiza que las operaciones posteriores hayan terminado correctamente.
 
-The Validation Library is restricted to authorized management users. External Staff and Center Groups cannot access its documents.
+El estado `Processed` indica que el proceso ha finalizado satisfactoriamente, mientras que `Error` identifica errores de procesamiento o del registro de ejecución.
 
+## 4. Estados del documento
 
-The `Processing` status indicates that the document has entered the protected processing stage. It does not guarantee successful completion of downstream operations.
+El flujo de procesamiento utiliza metadatos documentales para controlar el ciclo de vida de cada archivo Excel.
 
-The `Processed` status indicates successful completion, while `Error` identifies processing or logging failures.
-
-
-## 4. Document Status
-
-The processing workflow uses document metadata to track the lifecycle of each Excel file.
-
-| Status | Purpose |
+| Estado | Finalidad |
 |---|---|
-| Pending Validation | Document awaiting review |
-| Validated | Document approved for processing; triggers FL02 |
-| Processing | FL02 is executing and the source document is protected |
-| Processed | Processing completed successfully |
-| Error | Processing failed or could not complete successfully |
+| Pending Validation | Documento pendiente de revisión |
+| Validated | Documento aprobado para su procesamiento; desencadena FL02 |
+| Processing | FL02 está ejecutándose y el documento de origen está protegido |
+| Processed | Procesamiento finalizado correctamente |
+| Error | El procesamiento ha fallado o no ha podido completarse satisfactoriamente |
 
-The `Validated` status is used by the FL02 trigger condition.
+El estado `Validated` se utiliza en la condición de activación de FL02.
 
-FL02 changes the status to `Processing` during execution.
+Durante la ejecución, FL02 cambia el estado a `Processing`.
 
-The final status is `Processed` when processing and logging complete successfully, or `Error` when processing fails, SharePoint record creation errors occur, or required logging fails.
+El estado final es `Processed` cuando el procesamiento y el registro de ejecución finalizan correctamente, o `Error` cuando falla el procesamiento, se producen errores al crear registros de SharePoint o falla el registro de ejecución obligatorio.
 
-The exact SharePoint choice values and internal column names must match the target implementation.
+Los valores exactos de las opciones de SharePoint y los nombres internos de las columnas deben coincidir con los de la implementación de destino.
 
+## 5. Permisos de la biblioteca
 
+La biblioteca de validación utiliza permisos exclusivos en lugar de heredar un acceso sin restricciones del subsitio de gestión.
 
-## 5. Library Permissions
+### Permisos durante la validación
 
-The Validation Library uses unique permissions rather than inheriting unrestricted access from the Management Subsite.
-
-### Permissions During Validation
-
-| Role | Access |
+| Rol | Acceso |
 |---|---|
-| Site Collection Administrators | Administrative control |
-| Site Owners | Edit |
-| Site Members | Edit |
-| Center Groups | No access |
-| External Staff | No access |
+| Site Collection Administrators | Control administrativo |
+| Site Owners | Edición |
+| Site Members | Edición |
+| Center Groups | Sin acceso |
+| External Staff | Sin acceso |
 
-Site Owners and Site Members can review and modify documents during the validation stage.
+Los Site Owners y Site Members pueden revisar y modificar los documentos durante la fase de validación.
 
-### Permissions After Processing Starts
+### Permisos después del inicio del procesamiento
 
-When FL02 detects a document with status `Validated`, it applies file-level permission changes.
+Cuando FL02 detecta un documento con estado `Validated`, aplica cambios en los permisos a nivel de archivo.
 
-| Role | Access |
+| Rol | Acceso |
 |---|---|
-| Site Collection Administrators | Administrative control |
-| Site Owners | Read |
-| Site Members | Read |
-| Center Groups | No access |
-| External Staff | No access |
+| Site Collection Administrators | Control administrativo |
+| Site Owners | Lectura |
+| Site Members | Lectura |
+| Center Groups | Sin acceso |
+| External Staff | Sin acceso |
 
+FL02 interrumpe la herencia de permisos del archivo y concede acceso de solo lectura a Site Owners y Site Members antes de cambiar el estado del documento de `Validated` a `Processing`.
 
-FL02 breaks file-level permission inheritance and grants read-only access to Site Owners and Site Members before changing the document status from `Validated` to `Processing`.
+Una conexión de automatización debidamente autorizada realiza las operaciones necesarias.
 
+Es necesario comprobar los permisos efectivos para garantizar que los usuarios no conserven acceso de edición a través de otros grupos o asignaciones directas.
 
-An appropriately authorized automation connection performs the required operations.
+## 6. Protección de documentos procesados
 
-The effective permissions must be tested to ensure that users do not retain editing access through other groups or direct permission assignments.
+FL02 modifica los permisos a nivel de archivo cuando un documento validado entra en la fase de procesamiento.
 
+El flujo realiza las siguientes operaciones:
 
+1. Interrumpe la herencia de permisos del archivo.
+2. Concede permiso de lectura al grupo Site Owners.
+3. Concede permiso de lectura al grupo Site Members.
+4. Cambia el estado del documento de `Validated` a `Processing`.
+5. Continúa con las operaciones principales de procesamiento de Excel.
+6. Actualiza el estado del documento a `Processed` cuando termina correctamente, o a `Error` si el procesamiento no puede completarse satisfactoriamente.
 
-## 6. Processed Document Protection
+Con este modelo de seguridad, los Site Owners y Site Members ordinarios no pueden modificar el documento protegido.
 
-FL02 modifies file-level permissions when a validated document enters the processing stage.
+Los Site Collection Administrators conservan sus privilegios administrativos.
 
-The workflow performs the following operations:
+Deben validarse los permisos efectivos para garantizar que otras pertenencias a grupos o concesiones directas no proporcionen acceso de edición no previsto.
 
-1. Breaks permission inheritance on the file.
-2. Grants Read permission to the Site Owners group.
-3. Grants Read permission to the Site Members group.
-4. Updates the document status from `Validated` to `Processing`.
-5. Continues the main Excel processing operations.
-6. Updates the document status to `Processed` upon successful completion or to `Error` if processing cannot complete successfully.
-
-Under this security model, ordinary Site Owners and Members cannot modify the protected document.
-
-Site Collection Administrators retain administrative privileges.
-
-The effective permissions must be validated to ensure that no additional group memberships or direct grants provide unintended editing access.
-
-
-## 7. Processing Workflow
+## 7. Flujo de procesamiento
 
 ```mermaid
 flowchart TD
-    A["Excel Document in Validation Library"]
-    B{"Status Validated?"}
-    C["FL02 Starts"]
-    D["Break File Permission Inheritance"]
-    E["Grant Read to Owners and Members"]
-    F["Update Status to Processing"]
-    G["Process Excel Data"]
-    H["Create Records and Export Workbook"]
-    I["Execute FL04 Processing Log"]
-    J{"Processing and Logging Successful?"}
-    K["Update Status to Processed"]
-    L["Update Status to Error"]
+    A["Documento Excel en la biblioteca de validación"]
+    B{"¿Estado Validated?"}
+    C["Se inicia FL02"]
+    D["Interrumpir herencia de permisos del archivo"]
+    E["Conceder lectura a Owners y Members"]
+    F["Cambiar estado a Processing"]
+    G["Procesar datos de Excel"]
+    H["Crear registros y libro de exportación"]
+    I["Ejecutar FL04 para registrar el procesamiento"]
+    J{"¿Procesamiento y registro correctos?"}
+    K["Cambiar estado a Processed"]
+    L["Cambiar estado a Error"]
 
     A --> B
-    B -->|Yes| C
+    B -->|Sí| C
     C --> D
     D --> E
     E --> F
@@ -157,91 +145,86 @@ flowchart TD
     G --> H
     H --> I
     I --> J
-    J -->|Yes| K
+    J -->|Sí| K
     J -->|No| L
-
 ```
 
-This diagram summarizes the conceptual processing sequence.
+El diagrama resume la secuencia conceptual de procesamiento.
 
-The complete workflow, including error handling and record relationships, is documented separately in FL02.
+El flujo completo, incluido el tratamiento de errores y las relaciones entre registros, se documenta por separado en FL02.
 
+## 8. Consideración importante sobre el procesamiento
 
-## 8. Important Processing Consideration
+El estado `Processing` indica que el documento ha entrado en la fase protegida de procesamiento.
 
-The `Processing` status indicates that the document has entered the protected processing stage.
+No garantiza que todas las operaciones posteriores hayan finalizado correctamente.
 
-It does not guarantee that all downstream operations have completed successfully.
+El documento solo se marca como `Processed` cuando el flujo de procesamiento y el registro de ejecución obligatorio finalizan satisfactoriamente.
 
-The document is marked as `Processed` only when the processing workflow and required logging complete successfully.
+Si falla el procesamiento, se producen errores al crear registros de SharePoint o falla el registro de ejecución obligatorio, el documento se marca como `Error`.
 
-If processing fails, SharePoint record creation errors occur, or required logging fails, the document is marked as `Error`.
+La lista de registros de ejecución proporciona detalles y diagnósticos de las ejecuciones mediante FL04.
 
-The Processing Logs List provides execution details and diagnostic information through FL04.
+## 9. Integración con Power Automate
 
+### FL01 - Recepción de documentos
 
-## 9. Integration with Power Automate
+FL01 se inicia cuando se presenta una nueva solicitud mediante la lista de recepción de solicitudes del sitio principal de SharePoint.
 
+El flujo recupera el libro de Excel adjunto y crea una copia en la biblioteca de validación del subsitio de gestión.
 
-### FL01 - Document Intake
+Esta copia se utiliza para la validación interna y el posterior procesamiento mediante FL02.
 
-FL01 starts when a new request is submitted through the Request Intake List in the Main SharePoint Site.
+También se crea otra copia independiente en la biblioteca de documentos derivados del sitio principal de SharePoint para su consulta en modo de solo lectura por los usuarios autorizados.
 
-The workflow retrieves the attached Excel workbook and creates a copy in the Validation Library in the Management Subsite.
+### FL02 - Procesamiento de Excel
 
-This copy is used for internal validation and subsequent processing through FL02.
+Se encarga de:
 
-A separate copy is also created in the Derived Documents Library in the Main SharePoint Site for read-only consultation by authorized users.
+- Detectar documentos validados.
+- Modificar permisos a nivel de archivo.
+- Actualizar estados.
+- Extraer datos de Excel.
+- Crear registros principales y asociados.
+- Generar el libro de exportación.
+- Elaborar resúmenes y registrar resultados del procesamiento.
 
+### FL04 - Registros de ejecución
 
-### FL02 - Excel Processing
+Almacena los resultados del procesamiento y la información de diagnóstico en la lista de registros de ejecución.
 
-Handles:
+### FL05 - Permisos de registros
 
-- Validated document detection.
-- File-level permission changes.
-- Status updates.
-- Excel extraction.
-- Creation of primary and associated records.
-- Export workbook generation.
-- Processing summaries and logging.
+Aplica permisos basados en centros a los registros procesados de SharePoint.
 
-### FL04 - Processing Logs
+## 10. Consideraciones de seguridad
 
-Stores processing results and diagnostic information in the Processing Logs List.
+- Interrumpir la herencia de permisos únicamente cuando sea necesario.
+- Excluir a los Center Groups no autorizados.
+- Restringir la modificación de documentos procesados.
+- Conservar el acceso administrativo de los Site Collection Administrators.
+- Validar los permisos efectivos después de modificarlos.
+- Utilizar una conexión de Power Automate debidamente autorizada.
+- No depender del formato JSON para aplicar medidas de seguridad.
+- Evitar publicar identificadores de producción en repositorios públicos.
 
-### FL05 - Record Permissions
+## 11. Documentación relacionada
 
-Applies center-based permissions to processed SharePoint records.
+- [Subsitio de gestión](../sites/management-subsite.md)
+- [Arquitectura de sitios de SharePoint](../architecture/sites-architecture.md)
+- [Lista de registros procesados](../lists/processed-records.md)
+- [Lista de registros de ejecución](../lists/processing-logs.md)
+- [Descripción general de SharePoint](../README.md)
 
-## 10. Security Considerations
+## 12. Estado de la documentación
 
-- Break inheritance only where required.
-- Exclude unauthorized Center Groups.
-- Restrict modification of processed documents.
-- Preserve administrative access for Site Collection Administrators.
-- Validate effective permissions after permission changes.
-- Use an appropriately authorized Power Automate connection.
-- Do not rely on JSON formatting to enforce security.
-- Avoid exposing production identifiers in public repositories.
+**Estado:** Documentación conceptual de la biblioteca completada.
 
-## 11. Related Documentation
+Los siguientes detalles de implementación dependen del entorno:
 
-- [Management Subsite](../sites/management-subsite.md)
-- [SharePoint Sites Architecture](../architecture/sites-architecture.md)
-- [Processed Records List](../lists/processed-records.md)
-- [Processing Logs List](../lists/processing-logs.md)
-- [SharePoint Overview](../README.md)
+- Nombres exactos de las columnas de metadatos.
+- Definiciones de los roles de permisos de SharePoint.
+- Referencias de conexiones de Power Automate.
+- Identificadores de las bibliotecas de producción.
 
-## 12. Documentation Status
-
-**Status:** Conceptual library documentation complete.
-
-The following implementation details are environment-specific:
-
-- Exact metadata column names.
-- SharePoint permission role definitions.
-- Power Automate connection references.
-- Production library identifiers.
-
-This document is not an automated SharePoint library provisioning template.
+Este documento no es una plantilla automatizada para aprovisionar bibliotecas de SharePoint.
