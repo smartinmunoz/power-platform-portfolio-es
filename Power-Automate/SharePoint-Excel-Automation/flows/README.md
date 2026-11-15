@@ -1,38 +1,37 @@
+# Flujos de Power Automate
 
-# Power Automate Flows
+Esta carpeta está destinada a flujos de demostración desarrollados de forma independiente, basados en un escenario genérico de procesamiento de Excel.
 
-This folder is intended for independently developed demonstration flows based on a generic Excel processing scenario.
+## Flujos de la solución
 
-## Solution Flows
-
-| Flow | Description |
+| Flujo | Descripción |
 |---|---|
-| FL01 | File reception and SharePoint document distribution |
-| FL02 | Excel processing, export generation and SharePoint record creation |
-| FL03 | Scheduled temporary file cleanup |
-| FL04 | Child flow for processing logs and error tracking |
-| FL05 | Dynamic SharePoint record-level permissions |
+| FL01 | Recepción de archivos y distribución de documentos en SharePoint |
+| FL02 | Procesamiento de Excel, generación de exportaciones y creación de registros en SharePoint |
+| FL03 | Limpieza programada de archivos temporales |
+| FL04 | Flujo secundario para registrar ejecuciones y realizar el seguimiento de errores |
+| FL05 | Asignación dinámica de permisos a nivel de registro en SharePoint |
 
-## Architecture
+## Arquitectura
 
-FL01 prepares the documents for manual validation.
+FL01 prepara los documentos para su validación manual.
 
-FL02 processes validated files and creates the corresponding SharePoint records.
+FL02 procesa los archivos validados y crea los registros correspondientes en SharePoint.
 
-FL03 independently cleans up temporary files on a daily schedule.
+FL03 realiza de forma independiente la limpieza de archivos temporales según una programación diaria.
 
-FL04 is invoked by FL02 to record processing results and errors.
+FL04 es invocado por FL02 para registrar los resultados del procesamiento y los errores.
 
-FL05 applies dynamic permissions when SharePoint records are created.
+FL05 aplica permisos dinámicos cuando se crean registros en SharePoint.
 
-## Project Status
+## Estado del proyecto
 
-The demonstration flows are being prepared for independent implementation.
+Los flujos de demostración están en preparación para su implementación independiente.
 
-Technical documentation is available in the `docs` folder.
+La documentación técnica está disponible en la carpeta `docs`.
 
-## Security
+## Seguridad
 
-Only fictional data, generic configurations and independently developed components will be published.
+Solo se publicarán datos ficticios, configuraciones genéricas y componentes desarrollados de forma independiente.
 
-No corporate solution exports, credentials, internal URLs or confidential information will be included.
+No se incluirán exportaciones de soluciones corporativas, credenciales, direcciones URL internas ni información confidencial.
