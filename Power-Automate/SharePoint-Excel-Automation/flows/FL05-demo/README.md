@@ -1,208 +1,207 @@
+# FL05 - Permisos dinámicos de SharePoint
 
-# FL05 - Dynamic SharePoint Permissions
+## Descripción general
 
-## Overview
+Demostración conceptual de un flujo de Power Automate que asigna dinámicamente permisos a nivel de elemento en SharePoint Online.
 
-Conceptual demonstration of a Power Automate workflow that dynamically assigns item-level permissions in SharePoint Online.
+El flujo utiliza una lista de configuración independiente para identificar el grupo de seguridad asociado a cada registro de negocio.
 
-The workflow uses a separate configuration list to identify the security group associated with each business record.
+FL05 aplica un modelo de seguridad restrictivo cuando la configuración del centro no existe o está duplicada, evitando asignaciones de permisos no deseadas.
 
-FL05 follows a restrictive security model when the center configuration is missing or duplicated, preventing unintended permission assignments.
+## Arquitectura
 
-## Architecture
-
-### Workflow Diagram
+### Diagrama del flujo
 
 ```mermaid
 flowchart TD
-    A["SharePoint: Item created"] --> B["Find matching center"]
-    B --> C{"Exactly one center match?"}
+    A["SharePoint: elemento creado"] --> B["Buscar centro correspondiente"]
+    B --> C{"¿Existe exactamente una coincidencia de centro?"}
 
-    C -->|Yes| D["Get center group ID"]
-    D --> E["Break inheritance without copying permissions"]
-    E --> F["Grant Read to center group"]
-    F --> G["Grant Edit to Owners"]
-    G --> H["Grant Edit to Members"]
-    H --> I["Finish"]
+    C -->|Sí| D["Obtener ID del grupo del centro"]
+    D --> E["Romper herencia sin copiar permisos"]
+    E --> F["Conceder lectura al grupo del centro"]
+    F --> G["Conceder edición a Owners"]
+    G --> H["Conceder edición a Members"]
+    H --> I["Finalizar"]
 
-    C -->|No| J["Break inheritance without copying permissions"]
-    J --> K["Grant Edit to Owners"]
-    K --> L["Log invalid center configuration"]
+    C -->|No| J["Romper herencia sin copiar permisos"]
+    J --> K["Conceder edición a Owners"]
+    K --> L["Registrar configuración de centro no válida"]
     L --> I
 ```
 
-The diagram illustrates the conceptual permission assignment process.
+El diagrama representa el proceso conceptual de asignación de permisos.
 
-A valid center configuration requires exactly one matching record in the Centers Configuration List.
+Una configuración válida requiere exactamente un registro coincidente en la lista de configuración de centros (*Centers Configuration List*).
 
-If the lookup returns zero or multiple matches, FL05 follows the restrictive branch.
+Si la búsqueda devuelve cero o varias coincidencias, FL05 sigue la rama restrictiva.
 
-## Workflow Steps
+## Pasos del flujo
 
-1. Trigger when a new item is created in the Processed Records List.
-2. Search the Centers Configuration List for the matching center.
-3. Check whether exactly one matching center configuration exists.
-4. Apply the corresponding item-level permission strategy.
+1. Activarse cuando se crea un elemento en la lista de registros procesados (*Processed Records List*).
+2. Buscar el centro correspondiente en la lista de configuración de centros.
+3. Comprobar que existe exactamente una configuración coincidente.
+4. Aplicar la estrategia de permisos a nivel de elemento que corresponda.
 
-### Center Found
+### Centro encontrado
 
-When exactly one matching center configuration is found:
+Cuando se encuentra exactamente una configuración de centro:
 
-1. Retrieve the configured SharePoint group identifier.
-2. Break item-level permission inheritance without copying existing permissions.
-3. Grant Read permissions to the configured center group.
-4. Grant Edit permissions to the Owners group.
-5. Grant Edit permissions to the Members group.
-6. Complete the permission assignment process.
+1. Recuperar el identificador del grupo de SharePoint configurado.
+2. Romper la herencia de permisos del elemento sin copiar los permisos existentes.
+3. Conceder permisos de **Lectura** al grupo del centro configurado.
+4. Conceder permisos de **Edición** al grupo `Owners`.
+5. Conceder permisos de **Edición** al grupo `Members`.
+6. Finalizar la asignación de permisos.
 
-The conceptual JSON represents this behavior through the `ifTrue` branch of the `CenterFound` condition.
+El JSON conceptual representa este comportamiento mediante la rama `ifTrue` de la condición `CenterFound`.
 
-The permission inheritance action uses:
+La acción de interrupción de la herencia utiliza:
 
 ```json
 "copyExistingPermissions": false
 ```
 
-This prevents the automatic retention of inherited permissions when the item receives its unique permission configuration.
+Esto evita conservar automáticamente los permisos heredados cuando el elemento recibe su configuración de permisos exclusiva.
 
-### Invalid Center Configuration
+### Configuración de centro no válida
 
-FL05 requires exactly one matching center configuration.
+FL05 exige exactamente una configuración de centro coincidente.
 
-The conceptual condition is:
+La condición conceptual es:
 
 ```text
 length(matchingRecords) = 1
 ```
 
-If no matching center is found, or multiple configurations match the same center, the workflow follows the restrictive branch.
+Si no se encuentra ningún centro o varias configuraciones coinciden con el mismo centro, el flujo sigue la rama restrictiva.
 
-The workflow:
+El flujo:
 
-1. Breaks item-level permission inheritance without copying existing permissions.
-2. Grants Edit permissions to the Owners group.
-3. Does not grant permissions to the Members group or any center group.
-4. Logs a configuration error through `LogInvalidCenterMapping`.
-5. Completes with the invalid center configuration documented.
+1. Rompe la herencia de permisos del elemento sin copiar los permisos existentes.
+2. Concede permisos de **Edición** al grupo `Owners`.
+3. No concede permisos al grupo `Members` ni a ningún grupo de centro.
+4. Registra un error de configuración mediante `LogInvalidCenterMapping`.
+5. Finaliza dejando documentada la configuración de centro no válida.
 
-The diagnostic message is:
+El mensaje de diagnóstico es:
 
 ```text
 Center configuration validation failed. No unique matching center was found in Centers Configuration List (missing or duplicate configuration). Center permissions were not granted.
 ```
 
-This prevents missing or ambiguous center mappings from granting access to an unintended SharePoint group.
+Esto evita que una asignación de centro inexistente o ambigua conceda acceso a un grupo de SharePoint incorrecto.
 
-The conceptual JSON does not yet explicitly validate whether the configured SharePoint Group ID is valid and usable. This must be verified during implementation.
+El JSON conceptual todavía no valida explícitamente si el ID del grupo de SharePoint configurado es válido y utilizable. Este aspecto debe comprobarse durante la implementación.
 
-### Security Considerations
+### Consideraciones de seguridad
 
-The invalid-center-configuration branch follows a restrictive access model to avoid exposing records to unrelated center groups.
+La rama correspondiente a una configuración de centro no válida aplica un modelo de acceso restrictivo para evitar exponer registros a grupos de otros centros.
 
-Both conditional branches interrupt item-level permission inheritance without copying existing permissions.
+Ambas ramas interrumpen la herencia de permisos a nivel de elemento sin copiar los permisos existentes.
 
-In a production implementation, permission inheritance changes must be performed using an account with sufficient privileges.
+En una implementación de producción, los cambios de herencia deben ejecutarse con una cuenta que disponga de privilegios suficientes.
 
-The implementation must ensure that the flow execution identity and authorized administrators retain the access necessary to complete permission assignment.
+La implementación debe garantizar que la identidad que ejecuta el flujo y los administradores autorizados conservan el acceso necesario para completar la asignación de permisos.
 
-Permission changes and error handling should be tested before deployment to prevent accidental loss of access.
+Los cambios de permisos y el tratamiento de errores deben probarse antes del despliegue para evitar pérdidas accidentales de acceso.
 
-## Configuration-Driven Permissions
+## Permisos basados en configuración
 
-The workflow uses a SharePoint configuration list rather than hardcoded center-to-group mappings.
+El flujo utiliza una lista de configuración de SharePoint en lugar de definir directamente en el código las relaciones entre centros y grupos.
 
-Example using fictional values:
+Ejemplo con valores ficticios:
 
-| Center Reference | Security Group |
+| Referencia del centro | Grupo de seguridad |
 |---|---|
 | REGION-A | Center-Group-A |
 | REGION-B | Center-Group-B |
 | REGION-C | Center-Group-C |
 
-The configuration list allows authorized administrators to maintain center-to-group relationships without modifying the conceptual workflow for every mapping change.
+La lista de configuración permite que los administradores autorizados mantengan las relaciones entre centros y grupos sin modificar el flujo conceptual cada vez que cambia una asignación.
 
-Each operational center should have one valid configuration entry.
+Cada centro operativo debe tener una única entrada de configuración válida.
 
-Duplicate or missing center mappings must be treated as configuration errors.
+Las asignaciones de centro duplicadas o inexistentes deben tratarse como errores de configuración.
 
-## Permission Matrix
+## Matriz de permisos
 
-The workflow applies different permissions depending on whether exactly one matching center configuration is found.
+El flujo aplica permisos diferentes según exista o no exactamente una configuración de centro coincidente.
 
-| Group | Valid Center Configuration | Invalid Center Configuration |
+| Grupo | Configuración de centro válida | Configuración de centro no válida |
 |---|---|---|
-| Configured center group | Read | No access granted |
-| Owners | Edit | Edit |
-| Members | Edit | No access granted |
-| Other center groups | No access granted | No access granted |
+| Grupo del centro configurado | Lectura | No se concede acceso |
+| `Owners` | Edición | Edición |
+| `Members` | Edición | No se concede acceso |
+| Grupos de otros centros | No se concede acceso | No se concede acceso |
 
-### Permission Rules
+### Reglas de permisos
 
-- Center groups receive Read access only to records assigned to their center.
-- Owners receive Edit access in both scenarios.
-- Members receive Edit access only when exactly one matching center configuration is found.
-- No permissions are granted to unrelated center groups.
-- Missing or duplicate center configurations are recorded as diagnostic errors.
-- Permission inheritance is interrupted without copying existing permissions.
-- Invalid center mappings must not result in unintended access.
+- Los grupos de centro reciben acceso de **Lectura** únicamente a los registros asignados a su centro.
+- `Owners` recibe acceso de **Edición** en ambos escenarios.
+- `Members` recibe acceso de **Edición** solo cuando existe exactamente una configuración de centro coincidente.
+- No se conceden permisos a grupos de centros no relacionados.
+- Las configuraciones de centro inexistentes o duplicadas se registran como errores de diagnóstico.
+- La herencia de permisos se interrumpe sin copiar los permisos existentes.
+- Las asignaciones de centro no válidas no deben provocar accesos no deseados.
 
-### Implementation Considerations
+### Consideraciones de implementación
 
-This matrix describes the intended permissions of the conceptual workflow.
+Esta matriz describe los permisos previstos en el flujo conceptual.
 
-Effective permissions must be verified in SharePoint, including site collection administrators, the flow execution identity, and any access retained after breaking inheritance.
+Los permisos efectivos deben verificarse en SharePoint, teniendo en cuenta los administradores de la colección de sitios, la identidad que ejecuta el flujo y cualquier acceso que permanezca tras romper la herencia.
 
-The implementation must not assume that breaking inheritance automatically removes every form of administrative access.
+La implementación no debe asumir que romper la herencia elimina automáticamente todas las formas de acceso administrativo.
 
-Additional implementation validation is required for:
+Se requiere validación adicional para:
 
-- Invalid or nonexistent SharePoint Group IDs.
-- Missing and duplicate center mappings.
-- Users belonging to multiple SharePoint groups.
-- Permission assignment failures.
-- Access retained by site collection administrators.
-- Automation connections with elevated privileges.
-- Records created before FL05 completes its permission assignments.
+- ID de grupos de SharePoint inexistentes o no válidos.
+- Asignaciones de centro inexistentes o duplicadas.
+- Usuarios que pertenecen a varios grupos de SharePoint.
+- Errores durante la asignación de permisos.
+- Accesos conservados por los administradores de la colección de sitios.
+- Conexiones de automatización con privilegios elevados.
+- Registros creados antes de que FL05 termine de asignar sus permisos.
 
-The initial permissions of newly created records must prevent unintended access during the interval between item creation and FL05 permission assignment.
+Los permisos iniciales de los registros recién creados deben impedir accesos no deseados durante el intervalo entre la creación del elemento y la asignación de permisos por FL05.
 
-## Technical Highlights
+## Aspectos técnicos destacados
 
-- SharePoint event-driven automation.
-- Configuration-driven security group selection.
-- Unique center mapping validation.
-- Restrictive handling of missing or duplicate center configurations.
-- Dynamic group identifier retrieval.
-- SharePoint permission inheritance management.
-- Item-level access control.
-- SharePoint REST API integration.
-- Diagnostic logging for invalid configurations.
+- Automatización de SharePoint basada en eventos.
+- Selección de grupos de seguridad basada en configuración.
+- Validación de correspondencia única de centros.
+- Tratamiento restrictivo de configuraciones de centro inexistentes o duplicadas.
+- Recuperación dinámica de identificadores de grupo.
+- Gestión de la herencia de permisos de SharePoint.
+- Control de acceso a nivel de elemento.
+- Integración con la API REST de SharePoint.
+- Registro de diagnósticos para configuraciones no válidas.
 
-## Technologies
+## Tecnologías
 
 - Microsoft Power Automate
 - SharePoint Online
 - SharePoint REST API
-- SharePoint security groups
+- Grupos de seguridad de SharePoint
 - JSON
 - Mermaid
 
-## Implementation Status
+## Estado de implementación
 
-**Conceptual demonstration. Not an importable Power Automate flow.**
+**Demostración conceptual. No es un flujo importable en Power Automate.**
 
-The `FL05-demo.json` file describes the workflow architecture and does not contain executable Power Automate action definitions.
+El archivo `FL05-demo.json` describe la arquitectura del flujo y no contiene definiciones ejecutables de acciones de Power Automate.
 
-The conceptual design documents the intended permission assignment behavior.
+El diseño conceptual documenta el comportamiento previsto de la asignación de permisos.
 
-Actual SharePoint permissions, group resolution, error handling, and automation execution require validation in a controlled environment.
+Los permisos reales de SharePoint, la resolución de grupos, el tratamiento de errores y la ejecución de la automatización requieren validación en un entorno controlado.
 
-## Security
+## Seguridad
 
-- Fictional SharePoint sites and lists.
-- Fictional center references and group names.
-- No real user data.
-- No credentials or corporate identifiers.
-- No proprietary solution exports.
-- Restrictive permission handling for missing or duplicate center configurations.
-- Explicit validation requirements before production deployment.
+- Sitios y listas de SharePoint ficticios.
+- Referencias de centros y nombres de grupos ficticios.
+- Sin datos reales de usuarios.
+- Sin credenciales ni identificadores corporativos.
+- Sin exportaciones de soluciones propietarias.
+- Tratamiento restrictivo de permisos ante configuraciones de centro inexistentes o duplicadas.
+- Requisitos explícitos de validación antes de un despliegue en producción.
