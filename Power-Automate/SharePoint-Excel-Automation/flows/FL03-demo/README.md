@@ -1,79 +1,79 @@
-# FL03 - Temporary File Cleanup
+# FL03 - Limpieza de archivos temporales
 
-## Overview
+## Descripción general
 
-Conceptual demonstration of a scheduled Power Automate workflow that removes temporary SharePoint files older than 8 hours.
+Demostración conceptual de un flujo programado de Power Automate que elimina archivos temporales de SharePoint con más de 8 horas de antigüedad.
 
-All SharePoint resources and identifiers are fictional.
+Todos los recursos e identificadores de SharePoint son ficticios.
 
-## Architecture
+## Arquitectura
 
-### Workflow Diagram
+### Diagrama del flujo
 
 ```mermaid
 flowchart TD
-    A["Recurrence trigger"] --> B["Get temporary files"]
-    B --> C["Filter files older than 8 hours"]
-    C --> D{"Any files to process?"}
-    D -->|No| E["Finish"]
-    D -->|Yes| F["Apply to each file"]
-    F --> G["Delete temporary file"]
-    G -->|Success| H["Continue processing"]
-    G -->|Failed or skipped| I["Compose diagnostic message"]
+    A["Desencadenador de recurrencia"] --> B["Obtener archivos temporales"]
+    B --> C["Filtrar archivos con más de 8 horas"]
+    C --> D{"¿Hay archivos que procesar?"}
+    D -->|No| E["Finalizar"]
+    D -->|Sí| F["Aplicar a cada archivo"]
+    F --> G["Eliminar archivo temporal"]
+    G -->|Correcto| H["Continuar procesamiento"]
+    G -->|Error u omitido| I["Componer mensaje de diagnóstico"]
     I --> H
-    H --> J{"More files?"}
-    J -->|Yes| F
+    H --> J{"¿Quedan archivos?"}
+    J -->|Sí| F
     J -->|No| E
 ```
 
-## Workflow Steps
+## Pasos del flujo
 
-1. Run on a recurring schedule.
-2. Retrieve temporary files from a SharePoint document library.
-3. Filter files older than 8 hours.
-4. Iterate through the filtered files.
-5. Delete each selected file.
-6. Generate a diagnostic message if deletion fails or is skipped.
+1. Ejecutarse según una programación recurrente.
+2. Recuperar los archivos temporales de una biblioteca de documentos de SharePoint.
+3. Filtrar los archivos con más de 8 horas de antigüedad.
+4. Recorrer los archivos filtrados.
+5. Eliminar cada archivo seleccionado.
+6. Generar un mensaje de diagnóstico si la eliminación falla o se omite.
 
-## Retention Policy
+## Política de retención
 
-| Setting | Value |
+| Configuración | Valor |
 |---|---|
-| File age threshold | More than 8 hours |
-| Target | Temporary SharePoint files |
-| Execution | Recurring schedule |
-| Exact recurrence frequency | Not specified |
+| Umbral de antigüedad | Más de 8 horas |
+| Destino | Archivos temporales de SharePoint |
+| Ejecución | Programación recurrente |
+| Frecuencia exacta de recurrencia | No especificada |
 
-## Diagnostic Handling
+## Gestión de diagnósticos
 
-If a deletion action fails or is skipped, a Compose action generates a diagnostic message identifying the affected file and suggesting a check for an Excel Online lock.
+Si una acción de eliminación falla o se omite, una acción **Componer (Compose)** genera un mensaje de diagnóstico que identifica el archivo afectado y sugiere comprobar si existe un bloqueo de Excel Online.
 
-This is a diagnostic step, not a complete error logging or notification system.
+Se trata de una medida de diagnóstico, no de un sistema completo de registro de errores o notificaciones.
 
-## Technical Highlights
+## Aspectos técnicos destacados
 
-- Scheduled cloud flow design.
-- SharePoint document library operations.
-- Array filtering based on file age.
-- Apply to each processing.
-- Automated deletion of temporary files.
-- Conditional execution using Run after.
-- Diagnostic messages for failed or skipped operations.
+- Diseño de un flujo en la nube programado.
+- Operaciones sobre bibliotecas de documentos de SharePoint.
+- Filtrado de matrices según la antigüedad de los archivos.
+- Procesamiento mediante **Aplicar a cada uno (Apply to each)**.
+- Eliminación automatizada de archivos temporales.
+- Ejecución condicional mediante **Configurar ejecución posterior (Run after)**.
+- Mensajes de diagnóstico para operaciones fallidas u omitidas.
 
-## Implementation Status
+## Estado de implementación
 
-**Conceptual demonstration. Not an importable Power Automate flow.**
+**Demostración conceptual. No es un flujo importable de Power Automate.**
 
-The FL03-demo.json file describes the intended architecture and does not contain executable Power Automate action definitions.
+El archivo `FL03-demo.json` describe la arquitectura prevista y no contiene definiciones ejecutables de acciones de Power Automate.
 
-## Security
+## Seguridad
 
-- Fictional SharePoint resources.
-- No real user data.
-- No credentials or connection identifiers.
-- No corporate solution exports.
+- Recursos de SharePoint ficticios.
+- Sin datos reales de usuarios.
+- Sin credenciales ni identificadores de conexión.
+- Sin exportaciones de soluciones corporativas.
 
-## Technologies
+## Tecnologías
 
 - Microsoft Power Automate
 - SharePoint Online
