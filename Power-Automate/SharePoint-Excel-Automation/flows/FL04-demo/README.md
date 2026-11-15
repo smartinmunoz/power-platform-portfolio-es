@@ -1,166 +1,162 @@
-# FL04 - Processing Logs and Error Tracking
+# FL04 - Registro de ejecuciones y seguimiento de errores
 
-## Overview
+## Descripción general
 
-FL04 is a reusable Power Automate child flow that records processing results and errors in a SharePoint Online list.
+FL04 es un flujo secundario reutilizable de Power Automate que registra los resultados del procesamiento y los errores en una lista de SharePoint Online.
 
-It is invoked by FL02, the parent Excel processing workflow, and returns the identifier of the newly created log entry.
+Lo invoca FL02, el flujo principal de procesamiento de Excel, y devuelve el identificador del registro de ejecución recién creado.
 
-This conceptual demonstration illustrates centralized logging, execution traceability, and reusable automation components.
+Esta demostración conceptual ilustra el registro centralizado, la trazabilidad de las ejecuciones y la reutilización de componentes de automatización.
 
-## Architecture
+## Arquitectura
 
 ```mermaid
 flowchart TD
-    A["FL02 - Parent Flow"] -->|"Pass 8 input parameters"| B["FL04 - Child Flow"]
-    B --> C["Receive processing information"]
-    C --> D["Calculate processing status"]
-    D --> E["Create SharePoint log item"]
-    E --> F["Retrieve created item ID"]
-    F -->|"Return Id_Log"| A
+    A["FL02 - Flujo principal"] -->|"Enviar 8 parámetros de entrada"| B["FL04 - Flujo secundario"]
+    B --> C["Recibir información del procesamiento"]
+    C --> D["Calcular estado del procesamiento"]
+    D --> E["Crear elemento de registro en SharePoint"]
+    E --> F["Obtener ID del elemento creado"]
+    F -->|"Devolver Id_Log"| A
 ```
 
-## Trigger
+## Desencadenador
 
-**Manually trigger a flow**
+**Desencadenar un flujo manualmente (Manually trigger a flow)**
 
-FL04 is called by FL02 and receives eight input parameters.
+FL04 es invocado por FL02 y recibe ocho parámetros de entrada.
 
-## Input Parameters
+## Parámetros de entrada
 
-| Parameter | Type | Description |
+| Parámetro | Tipo | Descripción |
 |---|---|---|
-| ProcessingReferenceId | Number | Reference identifier for the processing operation |
-| SourceFileId | Number | Identifier of the source file |
-| SourceFileName | Text | Name of the processed Excel file |
-| RecordsRead | Number | Number of records read |
-| RecordsCreated | Number | Number of records created |
-| RecordsWithErrors | Number | Number of records with errors |
-| ErrorDetails | Text | Details of processing errors |
-| ExecutionId | Text | Identifier used for execution traceability |
+| ProcessingReferenceId | Número | Identificador de referencia de la operación de procesamiento |
+| SourceFileId | Número | Identificador del archivo de origen |
+| SourceFileName | Texto | Nombre del archivo Excel procesado |
+| RecordsRead | Número | Número de registros leídos |
+| RecordsCreated | Número | Número de registros creados |
+| RecordsWithErrors | Número | Número de registros con errores |
+| ErrorDetails | Texto | Detalles de los errores de procesamiento |
+| ExecutionId | Texto | Identificador utilizado para la trazabilidad de la ejecución |
 
-## Workflow Steps
+## Pasos del flujo
 
-1. Receive processing parameters from FL02.
-2. Evaluate the processing results to determine the execution status.
-3. Generate the execution timestamp using `utcNow()`.
-4. Create a new item in the SharePoint processing log list.
-5. Store processing counts, error details, and execution identifiers.
-6. Retrieve the ID of the created SharePoint item.
-7. Return `Id_Log` to the parent flow.
+1. Recibir los parámetros de procesamiento enviados por FL02.
+2. Evaluar los resultados para determinar el estado de la ejecución.
+3. Generar la marca temporal de ejecución mediante `utcNow()`.
+4. Crear un elemento en la lista de registros de procesamiento de SharePoint.
+5. Almacenar los recuentos de registros, los detalles de errores y los identificadores de ejecución.
+6. Obtener el ID del elemento de SharePoint creado.
+7. Devolver `Id_Log` al flujo principal.
 
+## Lógica de los estados de procesamiento
 
-## Processing Status Logic
+El flujo determina el estado del procesamiento a partir del número de registros creados correctamente y del número de registros con errores.
 
-The workflow determines the processing status based on the number of successfully created records and records with errors.
-
-| Records Created | Records With Errors | Status |
+| Registros creados | Registros con errores | Estado |
 |---|---|---|
-| Greater than 0 | 0 | Success |
-| Greater than 0 | Greater than 0 | Partial Success |
-| 0 | Greater than 0 | Error |
-| 0 | 0 | No Records |
+| Mayor que 0 | 0 | `Success` |
+| Mayor que 0 | Mayor que 0 | `Partial Success` |
+| 0 | Mayor que 0 | `Error` |
+| 0 | 0 | `No Records` |
 
-The No Records status distinguishes executions that produce no records and report no errors from failed executions.
+El estado `No Records` permite distinguir las ejecuciones que no generan registros ni notifican errores de aquellas que presentan errores registrados.
 
-This conceptual status model assumes that RecordsWithErrors accurately reflects the relevant processing failures.
+Este modelo conceptual de estados presupone que `RecordsWithErrors` refleja correctamente los fallos de procesamiento relevantes.
 
-The status logic must be validated against the actual parent flow outputs during implementation.
+Durante la implementación, debe validarse la lógica de estados frente a los resultados reales del flujo principal.
 
+### Alcance del recuento de errores
 
-### Error Counting Scope
+En la demostración de FL02, `RecordsWithErrors` representa únicamente las operaciones fallidas de creación de registros en SharePoint.
 
-In the FL02 demonstration, RecordsWithErrors represents only failed SharePoint record creation operations.
+FL02 envía directamente a FL04 el contador `SharePointErrors` como valor de `RecordsWithErrors`.
 
-FL02 passes the SharePointErrors counter directly to FL04 as RecordsWithErrors.
+Los errores de validación de Excel, los tipos de registro no admitidos y los fallos generales del flujo quedan excluidos de este contador.
 
-Excel validation errors, unsupported record types, and workflow-level failures are excluded from this counter.
+El estado `No Records` indica que no se han creado registros y que no se han notificado errores de creación en SharePoint. **No garantiza que el flujo completo haya finalizado correctamente.**
 
-The No Records status means that no records were created and no SharePoint record creation failures were reported. It does not guarantee that the entire workflow completed successfully.
+Una implementación de producción debería registrar por separado los fallos generales del flujo para distinguir un procesamiento sin resultados de una ejecución fallida.
 
-A production implementation should track workflow-level failures separately to distinguish empty processing results from execution failures.
+## Estructura del registro en SharePoint
 
+FL04 crea registros en la lista `Processing Logs List`, ubicada en el subsitio de gestión.
 
-## SharePoint Log Structure
+El siguiente esquema está alineado con la configuración documentada de la lista de SharePoint.
 
-FL04 creates log entries in the `Processing Logs List`, located in the Management Subsite.
-
-The following schema is aligned with the documented SharePoint list configuration.
-
-| Display Name | Internal Name | Type | FL04 Value |
+| Nombre visible | Nombre interno | Tipo | Valor de FL04 |
 |---|---|---|---|
-| Processing Reference ID | ProcessingReferenceId | Number | inputs.ProcessingReferenceId |
-| Source File ID | SourceFileId | Number | inputs.SourceFileId |
-| Execution ID | ExecutionId | Single line of text | inputs.ExecutionId |
-| Execution Date | ExecutionDate | Date and time | utcNow() |
-| Records Read | RecordsRead | Number | inputs.RecordsRead |
-| Records Created | RecordsCreated | Number | inputs.RecordsCreated |
-| Records With Errors | RecordsWithErrors | Number | inputs.RecordsWithErrors |
-| Processing Status | Status | Choice | CalculatedProcessingStatus |
-| Error Details | ErrorDetails | Multiple lines of text | inputs.ErrorDetails |
+| Processing Reference ID | ProcessingReferenceId | Número | inputs.ProcessingReferenceId |
+| Source File ID | SourceFileId | Número | inputs.SourceFileId |
+| Execution ID | ExecutionId | Una línea de texto | inputs.ExecutionId |
+| Execution Date | ExecutionDate | Fecha y hora | utcNow() |
+| Records Read | RecordsRead | Número | inputs.RecordsRead |
+| Records Created | RecordsCreated | Número | inputs.RecordsCreated |
+| Records With Errors | RecordsWithErrors | Número | inputs.RecordsWithErrors |
+| Processing Status | Status | Opción | CalculatedProcessingStatus |
+| Error Details | ErrorDetails | Varias líneas de texto | inputs.ErrorDetails |
 
-### Processing Status Values
+### Valores del estado de procesamiento
 
-The `Status` field supports four conceptual values:
+El campo `Status` admite cuatro valores conceptuales:
 
 - `Success`
 - `Partial Success`
 - `Error`
 - `No Records`
 
-These values are calculated using `RecordsCreated` and `RecordsWithErrors`.
+Estos valores se calculan mediante `RecordsCreated` y `RecordsWithErrors`.
 
-### Additional Considerations
+### Consideraciones adicionales
 
-The `SourceFileName` input is received by FL04 but is not currently stored in the demonstrated SharePoint list.
+FL04 recibe el parámetro `SourceFileName`, pero actualmente no lo almacena en la lista de SharePoint presentada en la demostración.
 
-The SharePoint item ID is generated automatically when the log entry is created.
+El ID del elemento de SharePoint se genera automáticamente al crear el registro.
 
-FL04 returns this identifier to FL02 through the `Id_Log` output parameter.
+FL04 devuelve este identificador a FL02 mediante el parámetro de salida `Id_Log`.
 
-The standard SharePoint `Title` field must be configured appropriately if it remains required.
+El campo estándar `Title` de SharePoint debe configurarse adecuadamente si sigue siendo obligatorio.
 
-This schema is conceptual and does not represent an automatically provisioned SharePoint list.
+Este esquema es conceptual y no representa una lista de SharePoint aprovisionada automáticamente.
 
-For the complete list configuration, see [Processing Logs List](../../Sharepoint/lists/processing-logs.md).
+Para consultar la configuración completa, véase [Lista de registros de procesamiento](../../Sharepoint/lists/processing-logs.md).
 
+## Salida
 
-## Output
-
-| Parameter | Type | Description |
+| Parámetro | Tipo | Descripción |
 |---|---|---|
-| Id_Log | Number | ID of the newly created SharePoint log item |
+| Id_Log | Número | ID del elemento de registro de SharePoint recién creado |
 
-The output allows FL02 to reference the log entry created by FL04.
+Esta salida permite que FL02 haga referencia al registro creado por FL04.
 
-## Technical Highlights
+## Aspectos técnicos destacados
 
-- Reusable parent-child flow architecture.
-- Parameterized flow execution.
-- Centralized SharePoint logging.
-- Conditional status calculation.
-- Automatic UTC execution timestamps.
-- Execution traceability.
-- Structured response to the parent workflow.
+- Arquitectura reutilizable de flujos principal y secundario.
+- Ejecución parametrizada de flujos.
+- Registro centralizado en SharePoint.
+- Cálculo condicional del estado.
+- Marcas temporales de ejecución automáticas en UTC.
+- Trazabilidad de las ejecuciones.
+- Respuesta estructurada al flujo principal.
 
-## Technologies
+## Tecnologías
 
 - Microsoft Power Automate
 - SharePoint Online
-- Power Automate child flows
-- Workflow expressions
+- Flujos secundarios de Power Automate
+- Expresiones de flujo de trabajo
 - JSON
 - Mermaid
 
-## Implementation Status
+## Estado de implementación
 
-**Conceptual demonstration. Not an importable Power Automate flow.**
+**Demostración conceptual. No es un flujo importable de Power Automate.**
 
-The `FL04-demo.json` file describes the workflow architecture and does not contain executable Power Automate action definitions.
+El archivo `FL04-demo.json` describe la arquitectura prevista y no contiene definiciones ejecutables de acciones de Power Automate.
 
-## Security
+## Seguridad
 
-- Fictional SharePoint site and list.
-- No real processing records.
-- No credentials or corporate identifiers.
-- No proprietary solution exports.
+- Sitio y lista de SharePoint ficticios.
+- Sin registros reales de procesamiento.
+- Sin credenciales ni identificadores corporativos.
+- Sin exportaciones de soluciones propietarias.
