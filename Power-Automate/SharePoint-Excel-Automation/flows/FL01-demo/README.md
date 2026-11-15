@@ -1,33 +1,33 @@
-# FL01 - SharePoint File Reception and Distribution
+# FL01 - Recepción y distribución de archivos en SharePoint
 
-## Overview
+## Descripción general
 
-Demonstration of a Power Automate workflow designed to receive Excel attachments from a SharePoint list and distribute them to two document libraries.
+Demostración de un flujo de Power Automate diseñado para recibir archivos Excel adjuntos a elementos de una lista de SharePoint y distribuirlos a dos bibliotecas documentales.
 
-All names, identifiers and data are fictional.
+Todos los nombres, identificadores y datos son ficticios.
 
-## Architecture
+## Arquitectura
 
-### Workflow Diagram
+### Diagrama del flujo
 
 ```mermaid
 flowchart TD
-    A["New item in Request Intake List"]
-    B["Apply request item permissions"]
-    C{"Excel attachment available?"}
-    D["Get attachments"]
-    E["Get Excel attachment content"]
-    F["Create file in Derived Documents Library"]
-    G["Apply read access for Main Site users"]
-    H["Create file in Validation Library"]
-    I["Apply restricted validation permissions"]
-    J["Update request processing status"]
-    K["End"]
-    L["Record missing or invalid attachment"]
+    A["Nuevo elemento en la lista de recepción de solicitudes"]
+    B["Aplicar permisos al elemento de solicitud"]
+    C{"¿Hay un adjunto Excel disponible?"}
+    D["Obtener adjuntos"]
+    E["Obtener contenido del adjunto Excel"]
+    F["Crear archivo en la biblioteca de documentos derivados"]
+    G["Aplicar acceso de lectura a usuarios del sitio principal"]
+    H["Crear archivo en la biblioteca de validación"]
+    I["Aplicar permisos restringidos de validación"]
+    J["Actualizar el estado de procesamiento de la solicitud"]
+    K["Fin"]
+    L["Registrar adjunto ausente o no válido"]
 
     A --> B
     B --> C
-    C -->|Yes| D
+    C -->|Sí| D
     D --> E
     E --> F
     F --> G
@@ -39,141 +39,138 @@ flowchart TD
     L --> K
 ```
 
+**Desencadenador:** SharePoint, cuando se crea un elemento en la lista de recepción de solicitudes (*Request Intake List*).
 
-**Trigger:** SharePoint - When an item is created in the Request Intake List.
+**Proceso:**
 
-**Process:**
+1. Detectar una nueva solicitud enviada a través de la lista de recepción de solicitudes de SharePoint.
+2. Aplicar permisos a nivel de elemento a la solicitud presentada.
+3. Recuperar los archivos adjuntos de la solicitud.
+4. Identificar y recuperar el libro de Excel (`.xlsx`).
+5. Crear una copia en la biblioteca de documentos derivados (*Derived Documents Library*) del sitio principal.
+6. Garantizar el acceso de lectura a dicha biblioteca para todos los usuarios autorizados del sitio principal.
+7. Crear una segunda copia en la biblioteca de validación (*Validation Library*) del subsitio de gestión.
+8. Aplicar el modelo de permisos restringidos necesario para la validación interna.
+9. Actualizar el estado de procesamiento y los metadatos relevantes de la solicitud.
+10. Finalizar el flujo.
 
-1. Detect a new request submitted through the SharePoint Request Intake List.
-2. Apply item-level permissions to the submitted request.
-3. Retrieve the attachments associated with the request.
-4. Identify and retrieve the Excel workbook (.xlsx).
-5. Create a document copy in the Derived Documents Library, located in the Main Site.
-6. Ensure read access to the Derived Documents Library for all authorized Main Site users.
-7. Create a second document copy in the Validation Library, located in the Management Subsite.
-8. Apply the restricted permission model required for internal validation.
-9. Update the request processing status and relevant metadata.
-10. Complete the workflow.
+## Componentes de SharePoint
 
-## SharePoint Components
+FL01 se inicia cuando se crea una nueva solicitud en la lista de recepción de solicitudes de SharePoint.
 
-FL01 starts when a new request is created in the SharePoint Request Intake List.
+Cada solicitud es un elemento de lista que contiene observaciones y un libro de Excel adjunto.
 
-Each request is a SharePoint list item containing observations and an attached Excel workbook.
+El flujo recupera los adjuntos y crea copias documentales en dos bibliotecas de SharePoint.
 
-The workflow retrieves the attachments and creates document copies in two SharePoint libraries.
-
-| Component | Location | Purpose |
+| Componente | Ubicación | Finalidad |
 |---|---|---|
-| Request Intake List | Main Site | Stores request records, observations, and Excel attachments. |
-| Derived Documents Library | Main Site | Stores document copies generated from requests. All site users have read access. |
-| Validation Library | Management Subsite | Stores Excel copies for internal validation and subsequent processing. Access is restricted to authorized management users. |
+| Lista de recepción de solicitudes (*Request Intake List*) | Sitio principal | Almacena solicitudes, observaciones y archivos Excel adjuntos. |
+| Biblioteca de documentos derivados (*Derived Documents Library*) | Sitio principal | Almacena copias de documentos generadas a partir de solicitudes. Todos los usuarios autorizados del sitio tienen acceso de lectura. |
+| Biblioteca de validación (*Validation Library*) | Subsitio de gestión | Almacena copias Excel para validación interna y posterior procesamiento. Acceso restringido a usuarios de gestión autorizados. |
 
-The Request Intake List is the entry point of the process. It is not a document library.
+La lista de recepción de solicitudes es el punto de entrada del proceso. **No es una biblioteca documental**.
 
-The Derived Documents Library provides read-only access to documents for all authorized users of the Main Site.
+La biblioteca de documentos derivados proporciona acceso de solo lectura a los documentos para todos los usuarios autorizados del sitio principal.
 
-The Validation Library is located in the Management Subsite and follows a separate, restricted permission model.
+La biblioteca de validación se encuentra en el subsitio de gestión y sigue un modelo de permisos independiente y restringido.
 
+## Permisos
 
+FL01 utiliza modelos de permisos diferentes para el elemento de solicitud y para las copias documentales creadas durante el procesamiento.
 
-## Permissions
-
-FL01 uses different permission models for the request item and the document copies created during processing.
-
-| SharePoint Resource | External Staff | Site Members | Site Owners |
+| Recurso de SharePoint | Personal externo | Miembros del sitio | Propietarios del sitio |
 |---|---|---|---|
-| Request Intake List | Create requests and read authorized items | Read | Read |
-| Derived Documents Library | Read | Read | Read |
-| Validation Library | No access | Edit during validation | Edit during validation |
+| Lista de recepción de solicitudes | Crear solicitudes y leer elementos autorizados | Lectura | Lectura |
+| Biblioteca de documentos derivados | Lectura | Lectura | Lectura |
+| Biblioteca de validación | Sin acceso | Edición durante la validación | Edición durante la validación |
 
-### Request Intake List
+### Lista de recepción de solicitudes
 
-External staff submit requests through SharePoint list items containing observations and Excel attachments.
+El personal externo presenta solicitudes mediante elementos de lista de SharePoint que contienen observaciones y archivos Excel adjuntos.
 
-FL01 applies item-level permissions to control access to submitted requests.
+FL01 aplica permisos a nivel de elemento para controlar el acceso a las solicitudes presentadas.
 
-### Derived Documents Library
+### Biblioteca de documentos derivados
 
-The library is located in the Main Site.
+La biblioteca está ubicada en el sitio principal.
 
-All authorized Main Site users have read access to the documents.
+Todos los usuarios autorizados del sitio principal tienen acceso de lectura a los documentos.
 
-The workflow uses an authorized service connection to create and manage document copies.
+El flujo utiliza una conexión de servicio autorizada para crear y gestionar las copias documentales.
 
-### Validation Library
+### Biblioteca de validación
 
-The library is located in the Management Subsite.
+La biblioteca está ubicada en el subsitio de gestión.
 
-External staff and center groups do not have access.
+El personal externo y los grupos de centros no tienen acceso.
 
-Authorized management users can modify documents during the validation stage.
+Los usuarios de gestión autorizados pueden modificar los documentos durante la etapa de validación.
 
-After FL02 processes a validated document, it applies read-only permissions to Site Members and Site Owners. Site Collection Administrators retain administrative modification capabilities.
+Una vez que FL02 procesa un documento validado, aplica permisos de solo lectura a los miembros y propietarios del sitio. Los administradores de la colección de sitios conservan sus capacidades administrativas de modificación.
 
-### Security Considerations
+### Consideraciones de seguridad
 
-- SharePoint permissions enforce access restrictions.
-- JSON interface customizations do not replace security permissions.
-- Automation connections require appropriate permissions to create files and update access.
-- Site Collection Administrators retain administrative control.
-- The permission model must be tested in a demonstration environment before production use.
+- Los permisos de SharePoint hacen efectivas las restricciones de acceso.
+- Las personalizaciones de interfaz mediante JSON no sustituyen a los permisos de seguridad.
+- Las conexiones de automatización necesitan permisos adecuados para crear archivos y actualizar accesos.
+- Los administradores de la colección de sitios conservan el control administrativo.
+- El modelo de permisos debe probarse en un entorno de demostración antes de utilizarse en producción.
 
+## Estado de implementación
 
-## Implementation Status
+**Demostración conceptual. No es un flujo importable directamente en Power Automate.**
 
-**Conceptual demonstration. Not an importable Power Automate flow.**
+El archivo [FL01-demo.json](FL01-demo.json) documenta la arquitectura prevista del flujo.
 
-The FL01-demo.json file documents the intended workflow architecture.
+Los permisos de SharePoint, las actualizaciones de metadatos y el tratamiento de adjuntos deben implementarse y probarse en un entorno adecuado.
 
-SharePoint permissions, metadata updates and attachment processing must be implemented and tested in an appropriate environment.
+## Seguridad
 
-## Security
+- Recursos de SharePoint ficticios.
+- Sin datos reales de usuarios.
+- Sin credenciales ni identificadores de conexión.
+- Sin exportaciones de soluciones corporativas.
 
-- Fictional SharePoint resources.
-- No real user data.
-- No credentials or connection identifiers.
-- No corporate solution exports.
+## Aspectos técnicos destacados
 
-## Technical Highlights
+Este flujo conceptual demuestra el diseño de un proceso de automatización documental basado en SharePoint y Microsoft Power Automate.
 
-This conceptual workflow demonstrates the design of a SharePoint-based document automation process using Microsoft Power Automate.
+### Gestión de permisos de SharePoint
 
-### SharePoint Permission Management
+- Romper la herencia de permisos en los elementos de la lista de solicitudes para controlar el acceso a cada solicitud.
+- Conceder acceso de lectura a la persona creadora de la solicitud, a los miembros del sitio y a los propietarios del sitio.
+- Proporcionar acceso de solo lectura a la biblioteca de documentos derivados para todos los usuarios autorizados del sitio principal.
+- Restringir el acceso a la biblioteca de validación a los usuarios de gestión autorizados.
+- Permitir que los miembros y propietarios del sitio editen documentos durante la etapa de validación.
+- Admitir los cambios de permisos de FL02 tras el procesamiento, dejando los documentos validados en modo de solo lectura para miembros y propietarios del sitio.
+- Preservar el control administrativo de los administradores de la colección de sitios.
+- Utilizar permisos de SharePoint para aplicar restricciones de acceso con independencia de las personalizaciones de interfaz JSON.
 
-- Break permission inheritance on request list items to control access to individual submissions.
-- Grant read access to the request creator, Site Members, and Site Owners.
-- Provide read-only access to the Derived Documents Library for all authorized Main Site users.
-- Restrict access to the Validation Library to authorized management users.
-- Allow Site Members and Site Owners to edit validation documents during the validation stage.
-- Support FL02 permission changes after processing, making validated documents read-only for Site Members and Site Owners.
-- Preserve administrative control for Site Collection Administrators.
-- Use SharePoint permissions to enforce access restrictions independently of JSON interface customizations.
+### Automatización documental
 
+- Activar un flujo cuando se crea un elemento en una lista de SharePoint.
+- Recuperar archivos adjuntos y su contenido.
+- Crear documentos en bibliotecas de SharePoint distintas.
+- Dar soporte a un proceso de validación documental.
 
-### Document Automation
-- Trigger a workflow when a new SharePoint list item is created.
-- Retrieve attachments and their content.
-- Create documents in separate SharePoint libraries.
-- Support a document validation process.
+### Metadatos y seguimiento del proceso
 
-### Metadata and Process Tracking
-- Update SharePoint list item properties.
-- Retrieve and update document metadata.
-- Record processing information across different stages.
-- Maintain traceability between requests and related documents.
+- Actualizar propiedades de elementos de listas de SharePoint.
+- Recuperar y actualizar metadatos documentales.
+- Registrar información de procesamiento en diferentes etapas.
+- Mantener la trazabilidad entre las solicitudes y los documentos relacionados.
 
-### Architecture and Documentation
-- Document workflow architecture using Mermaid diagrams.
-- Describe workflow components using structured JSON.
-- Separate conceptual design from executable Power Automate definitions.
-- Use fictional resources to demonstrate technical concepts without exposing corporate information.
+### Arquitectura y documentación
 
-**Implementation note:** This repository contains a conceptual demonstration. The workflow has not been deployed or tested as an executable solution in the demonstration environment.
+- Documentar la arquitectura del flujo mediante diagramas Mermaid.
+- Describir los componentes del flujo mediante JSON estructurado.
+- Separar el diseño conceptual de las definiciones ejecutables de Power Automate.
+- Utilizar recursos ficticios para mostrar conceptos técnicos sin exponer información corporativa.
 
-## Technologies
+**Nota de implementación:** Este repositorio contiene una demostración conceptual. El flujo no se ha desplegado ni probado como solución ejecutable en el entorno de demostración.
+
+## Tecnologías
 
 - Microsoft Power Automate
 - SharePoint Online
 - JSON
-
