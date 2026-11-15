@@ -1,316 +1,274 @@
+# FL02 - Procesamiento de Excel y creación de registros
 
-# FL02 - Excel Processing and Record Creation
+## Descripción general
 
-## Overview
+FL02 es el flujo principal de Power Automate encargado de procesar archivos Excel validados, generar libros de salida y crear registros relacionados en SharePoint Online.
 
-FL02 is the main Power Automate workflow responsible for processing validated Excel files, generating output workbooks, and creating related records in SharePoint Online.
+Orquesta la gestión documental en SharePoint, la ejecución de Office Scripts, el procesamiento secuencial de registros, el seguimiento de errores y el registro de ejecuciones mediante el flujo secundario FL04.
 
-It orchestrates SharePoint document management, Office Scripts, sequential record processing, error tracking, and execution logging through the FL04 child flow.
+Se trata de una demostración conceptual independiente con datos ficticios.
 
-This is an independent conceptual demonstration using fictional data.
-
-## Architecture
+## Arquitectura
 
 ```mermaid
 flowchart TD
-    A["SharePoint: File created or modified"]
-    A --> B{"Status = Validated?"}
-    B -->|No| Z["End"]
-    B -->|Yes| C["Initialize 6 variables"]
+    A["SharePoint: archivo creado o modificado"]
+    A --> B{"¿Estado = Validated?"}
+    B -->|No| Z["Fin"]
+    B -->|Sí| C["Inicializar 6 variables"]
 
-    C --> D["Break file permission inheritance"]
-    D --> E["Grant Read to Members"]
-    E --> F["Grant Read to Owners"]
-    F --> G["Update file status to Processing"]
-    G --> H{"Additional validation condition"}
+    C --> D["Romper la herencia de permisos del archivo"]
+    D --> E["Conceder lectura a Members"]
+    E --> F["Conceder lectura a Owners"]
+    F --> G["Cambiar estado del archivo a Processing"]
+    G --> H{"Condición de validación adicional"}
 
-    H -->|Yes| I["Get validated Excel file"]
-    I --> J["Create temporary Excel file"]
-    J --> K["Run Office Script: Extract records"]
-    K --> L{"Script result valid?"}
+    H -->|Sí| I["Obtener archivo Excel validado"]
+    I --> J["Crear archivo Excel temporal"]
+    J --> K["Ejecutar Office Script: extraer registros"]
+    K --> L{"¿Resultado del script válido?"}
 
-    L -->|Yes| M["Get Excel export template"]
-    M --> N["Create export workbook"]
-    N --> O["Run Office Script: Populate export"]
-    O --> P["Apply to each Excel record - Sequential"]
+    L -->|Sí| M["Obtener plantilla Excel de exportación"]
+    M --> N["Crear libro Excel de exportación"]
+    N --> O["Ejecutar Office Script: rellenar exportación"]
+    O --> P["Para cada registro Excel: secuencial"]
 
-    subgraph LOOP["Excel record processing"]
-        P --> Q["Look up center"]
-        Q --> R{"Record type = T?"}
+    subgraph LOOP["Procesamiento de registros Excel"]
+        P --> Q["Buscar centro"]
+        Q --> R{"¿Tipo de registro = T?"}
 
-        R -->|Yes| S["Create primary SharePoint record"]
-        S --> T{"Creation successful?"}
-        T -->|Yes| U["Save LastPrimaryRecordId"]
-        U --> V["Increment RecordsCreated"]
-        T -->|No| W["Increment SharePointErrors"]
-        W --> X["Append error to ErrorDetails"]
+        R -->|Sí| S["Crear registro principal en SharePoint"]
+        S --> T{"¿Creación correcta?"}
+        T -->|Sí| U["Guardar LastPrimaryRecordId"]
+        U --> V["Incrementar RecordsCreated"]
+        T -->|No| W["Incrementar SharePointErrors"]
+        W --> X["Añadir error a ErrorDetails"]
 
-        R -->|No| Y{"Record type = B?"}
-        Y -->|Yes| AA["Create associated SharePoint record"]
-        AA --> AB["Set ParentRecordId from LastPrimaryRecordId"]
-        AB --> AC{"Creation successful?"}
-        AC -->|Yes| AD["Increment RecordsCreated"]
-        AC -->|No| AE["Increment SharePointErrors"]
-        AE --> AF["Append error to ErrorDetails"]
-        
-        Y -->|No| AG["Unexpected record type: validation error"]
+        R -->|No| Y{"¿Tipo de registro = B?"}
+        Y -->|Sí| AA["Crear registro asociado en SharePoint"]
+        AA --> AB["Asignar ParentRecordId desde LastPrimaryRecordId"]
+        AB --> AC{"¿Creación correcta?"}
+        AC -->|Sí| AD["Incrementar RecordsCreated"]
+        AC -->|No| AE["Incrementar SharePointErrors"]
+        AE --> AF["Añadir error a ErrorDetails"]
 
+        Y -->|No| AG["Tipo de registro inesperado: error de validación"]
     end
 
-    V --> AH["Next record"]
+    V --> AH["Siguiente registro"]
     X --> AH
     AD --> AH
     AF --> AH
-    
-    AG --> AP["Stop processing and report validation error"]
+    AG --> AP["Detener procesamiento y comunicar error de validación"]
 
-    AH -->|More records| P
-
-    AH -->|All records processed| AI["Calculate final diagnostics"]
+    AH -->|Quedan registros| P
+    AH -->|Todos procesados| AI["Calcular diagnóstico final"]
     L -->|No| AI
     H -->|No| AI
 
-    AI --> AJ["Build processing summary"]
-    AJ --> AK["Call FL04 child flow"]
+    AI --> AJ["Preparar resumen de procesamiento"]
+    AJ --> AK["Invocar flujo secundario FL04"]
 
-    AK --> AL{"Processing completed successfully and SharePointErrors = 0?"}
-    AL -->|Yes| AM["Update file status to Processed"]
-    AL -->|No| AN["Update file status to Error"]
+    AK --> AL{"¿Procesamiento correcto y SharePointErrors = 0?"}
+    AL -->|Sí| AM["Cambiar estado a Processed"]
+    AL -->|No| AN["Cambiar estado a Error"]
 
-    AM --> AO["End"]
+    AM --> AO["Fin"]
     AN --> AO
 
-    G -.->|Unrecoverable execution failure| AN
-    AK -.->|FL04 logging failure| AN
+    G -.->|Fallo irrecuperable| AN
+    AK -.->|Fallo del registro FL04| AN
 ```
 
-The architecture diagram illustrates the conceptual processing workflow.
+El diagrama representa el procesamiento conceptual. El archivo de origen se marca como `Processing` antes de las operaciones con Excel. Tras procesar y registrar la ejecución, el flujo determina si debe quedar como `Processed` o `Error`.
 
-The source file is marked as `Processing` before Excel operations begin.
+Las flechas discontinuas representan rutas conceptuales de excepción; **no implican un tratamiento de errores ejecutable** en Power Automate.
 
-After processing and logging, the workflow determines whether the file should be marked as `Processed` or `Error`.
+## Desencadenador
 
-Dashed arrows represent conceptual exception paths. They do not imply executable Power Automate error handling.
+**SharePoint: Cuando se crea o modifica un archivo (solo propiedades).**
 
-## Trigger
+El flujo utiliza una condición de desencadenador que comprueba si el estado del archivo es `Validated`. Antes del procesamiento principal se aplica otra condición de validación.
 
-**SharePoint - When a file is created or modified (properties only)**
+Al cambiar el estado a `Processing`, las modificaciones posteriores dejan de cumplir la condición `Validated`, lo que ayuda a evitar ejecuciones duplicadas.
 
-The workflow uses a trigger condition that checks whether the file status is `Validated`.
+## Inicialización
 
-An additional condition is used before the main processing operations.
+El flujo inicializa seis variables:
 
-Changing the file status to `Processing` prevents subsequent file modifications from satisfying the `Validated` trigger condition.
-
-
-## Initialization
-
-The workflow initializes six variables:
-
-| Variable | Type | Purpose |
+| Variable | Tipo | Finalidad |
 |---|---|---|
-| SharePointErrors | Integer | Counts failed SharePoint record creation operations |
-| RecordsWithErrors | Integer | Stores the final number of records whose SharePoint creation failed |
-| LastPrimaryRecordId | Integer | Stores the last successfully created primary record ID |
-| LastPrimaryReferenceCode | String | Stores the ReferenceCode of the last successfully created primary record |
-| ErrorDetails | Array | Collects SharePoint record creation error details |
-| RecordsCreated | Integer | Counts successfully created SharePoint records |
+| `SharePointErrors` | Integer | Cuenta los errores de creación de registros en SharePoint. |
+| `RecordsWithErrors` | Integer | Almacena el número final de registros cuya creación falló. |
+| `LastPrimaryRecordId` | Integer | Guarda el ID del último registro principal creado correctamente. |
+| `LastPrimaryReferenceCode` | String | Guarda el `ReferenceCode` del último registro principal creado correctamente. |
+| `ErrorDetails` | Array | Recopila los detalles de errores de creación. |
+| `RecordsCreated` | Integer | Cuenta los registros creados correctamente. |
 
-### Primary Record Tracking
+### Seguimiento del registro principal
 
-When a new primary record (`T`) is processed:
+Al procesar un nuevo registro principal (`T`):
 
-1. Reset `LastPrimaryRecordId` to `0`.
-2. Reset `LastPrimaryReferenceCode` to an empty string.
-3. Attempt to create the primary SharePoint record.
-4. If creation succeeds, save the new item ID and its `ReferenceCode`.
-5. If creation fails, keep both tracking variables reset.
+1. Restablecer `LastPrimaryRecordId` a `0`.
+2. Vaciar `LastPrimaryReferenceCode`.
+3. Intentar crear el registro principal en SharePoint.
+4. Si se crea correctamente, guardar el nuevo ID y su `ReferenceCode`.
+5. Si falla, mantener ambas variables restablecidas.
 
-These variables allow associated records (`B`) to be linked only to a successfully created primary record with a matching `ReferenceCode`.
+De este modo, los registros asociados (`B`) solo pueden vincularse a un registro principal creado correctamente y con un `ReferenceCode` coincidente.
 
-### Error Counter Initialization
+### Inicialización de contadores de errores
 
-In this conceptual demonstration, `RecordsWithErrors` is calculated from `SharePointErrors` during final diagnostics.
+En esta demostración conceptual, `RecordsWithErrors` se calcula a partir de `SharePointErrors` durante el diagnóstico final. Ambos representan el número de operaciones fallidas de creación de registros en SharePoint.
 
-Both values represent the number of failed SharePoint record creation operations.
+## Gestión de permisos del documento
 
-## Document Permission Management
+Antes de procesar el Excel, el flujo:
 
-Before processing the Excel file, the workflow:
+1. Rompe la herencia de permisos del documento de origen.
+2. Concede permisos `Read` al grupo configurado `Members`.
+3. Concede permisos `Read` al grupo configurado `Owners`.
 
-1. Breaks permission inheritance on the source document.
-2. Grants Read permissions to the configured Members group.
-3. Grants Read permissions to the configured Owners group.
+Así se restringe la edición durante el procesamiento.
 
-This restricts editing during processing.
+## Estados del documento
 
-## Document Status
+La biblioteca de validación define cinco estados conceptuales: `Pending Validation`, `Validated`, `Processing`, `Processed` y `Error`.
 
+FL02 trabaja con los cuatro estados correspondientes a su fase: `Validated`, `Processing`, `Processed` y `Error`. `Pending Validation` pertenece a la fase anterior de validación documental.
 
-The Validation Library defines five conceptual document statuses: Pending Validation, Validated, Processing, Processed, and Error.
+### Definición de estados
 
-FL02 operates on the four statuses relevant to its processing stage: Validated, Processing, Processed, and Error. The Pending Validation status belongs to the preceding document validation stage.
-
-### Status Definitions
-
-| Status | Description |
+| Estado | Descripción |
 |---|---|
-| Validated | The document has been validated and is ready for processing |
-| Processing | The workflow has started processing the document |
-| Processed | Processing and execution logging completed successfully without SharePoint record creation errors |
-| Error | Processing failed, SharePoint record creation errors occurred, or execution logging failed |
+| `Validated` | Documento validado y listo para procesar. |
+| `Processing` | El flujo ha iniciado su procesamiento. |
+| `Processed` | Procesamiento y registro de ejecución completados sin errores de creación en SharePoint. |
+| `Error` | Falló el procesamiento, hubo errores de creación o falló el registro de ejecución. |
 
-### Status Transitions
+### Transiciones de estado
 
-| Previous Status | New Status | Condition |
+| Estado anterior | Estado nuevo | Condición |
 |---|---|---|
-| Validated | Processing | FL02 starts processing the validated document |
-| Processing | Processed | Main processing and FL04 logging succeed, with SharePointErrors = 0 |
-| Processing | Error | Main processing fails, SharePointErrors > 0, or FL04 logging fails |
+| `Validated` | `Processing` | FL02 comienza a procesar el documento validado. |
+| `Processing` | `Processed` | Procesamiento principal y registro FL04 correctos, con `SharePointErrors = 0`. |
+| `Processing` | `Error` | Falla el procesamiento, `SharePointErrors > 0` o falla FL04. |
 
-### Processing Status
+### Estado Processing
 
-At the beginning of execution, FL02 updates the source file status from `Validated` to `Processing`.
+Al comenzar, FL02 cambia el estado del archivo de `Validated` a `Processing`. Esto distingue los documentos en curso de los ya terminados. La condición del desencadenador solo acepta archivos `Validated`, reduciendo las ejecuciones duplicadas por actualizaciones de metadatos.
 
-This distinguishes documents currently being processed from documents that have completed processing.
+### Finalización correcta
 
-The trigger condition only accepts files with status `Validated`, helping prevent duplicate executions caused by subsequent metadata updates.
+FL02 prepara el diagnóstico de ejecución y llama a FL04. Si el procesamiento y el registro terminan correctamente, y no se detectan errores de creación de registros, el documento pasa a `Processed`.
 
-### Successful Completion
+### Tratamiento de errores
 
-After completing the main processing operations, FL02 prepares the execution diagnostics and invokes FL04.
+Si falla el flujo principal, se detectan errores de creación de registros o falla FL04, el documento se marca como `Error`. Esto facilita su investigación y corrección.
 
+La creación parcial de registros se considera un error a nivel de documento, aunque algunos registros sí se hayan creado.
 
-If processing and logging complete successfully and no SharePoint record creation errors are reported, FL02 updates the source document status to `Processed`.
+### Relación con los estados de FL04
 
-The `Processed` status indicates successful completion of the main processing workflow and the FL04 logging operation.
+El estado del documento y el estado de ejecución registrado por FL04 cumplen funciones diferentes.
 
-### Error Handling
-
-If the main processing workflow fails, SharePoint record creation errors are detected, or FL04 logging fails, the source document is marked as `Error`.
-
-The error status helps identify documents that require investigation or corrective action.
-
-Partial record creation is considered an error at the document level, even when some SharePoint records were successfully created.
-
-### Relationship with FL04 Status
-
-The source document status and the FL04 execution status serve different purposes.
-
-| Source Document Status | FL04 Processing Status | Scenario |
+| Estado del documento | Estado de FL04 | Escenario |
 |---|---|---|
-| Processed | Success | Processing completed successfully with records created and no SharePoint creation errors |
-| Processed | No Records | Processing completed successfully but no records were created |
-| Error | Partial Success | Some records were created and others failed |
-| Error | Error | No records were created and SharePoint creation errors occurred |
-| Error | Not available | Processing or logging failed before a log entry could be created |
+| `Processed` | `Success` | Procesamiento correcto, con registros creados y sin errores de creación. |
+| `Processed` | `No Records` | Procesamiento correcto, pero sin registros creados. |
+| `Error` | `Partial Success` | Se crearon algunos registros y fallaron otros. |
+| `Error` | `Error` | No se creó ningún registro y hubo errores de creación. |
+| `Error` | No disponible | Falló el procesamiento o el registro antes de poder generar una entrada. |
 
-A `No Records` log status does not automatically guarantee successful completion. The main workflow must also complete successfully.
+El estado `No Records` de FL04 no garantiza por sí solo que el procesamiento haya terminado correctamente: también debe finalizar bien el flujo principal.
 
-### Implementation Considerations
+### Consideraciones de implementación
 
-The conceptual JSON defines `MarkFileAsProcessing`, `MarkFileAsProcessed`, and `MarkFileAsError`.
+El JSON conceptual define `MarkFileAsProcessing`, `MarkFileAsProcessed` y `MarkFileAsError`.
 
-In a production implementation, Power Automate should use appropriate `Scope` actions, conditions, and `Configure run after` settings to manage success, failure, skipped, and timeout scenarios.
+En una implementación real deben configurarse acciones `Scope`, condiciones y opciones `Configure run after` para los casos de éxito, fallo, omisión y tiempo de espera. La rama de errores debe poder ejecutarse incluso si falla una acción anterior. También deben evitarse desencadenamientos innecesarios y documentos bloqueados indefinidamente en `Processing`.
 
-The error handling branch must be able to execute even when an earlier processing action fails.
+## Procesamiento de Excel
 
-Status updates should be designed to avoid unnecessary trigger executions and ensure that documents do not remain indefinitely in `Processing`.
+El flujo realiza estas operaciones:
 
-## Excel Processing
+1. Obtener el libro Excel validado.
+2. Crear una copia temporal de trabajo.
+3. Ejecutar `process-records.ts` para extraer los registros.
+4. Comprobar el resultado del Office Script.
+5. Obtener la plantilla de exportación predefinida.
+6. Crear un nuevo libro Excel de exportación.
+7. Ejecutar `populate-export-template.ts` para rellenar la plantilla.
+8. Continuar con la creación de registros en SharePoint.
 
-The workflow performs the following operations:
+El script de exportación escribe los datos en la plantilla a partir de la **fila 15**.
 
-1. Retrieve the validated source workbook.
-2. Create a temporary working copy.
-3. Execute `process-records.ts` to extract Excel records.
-4. Check the Office Script result.
-5. Retrieve the predefined export template.
-6. Create a new Excel export workbook.
-7. Execute `populate-export-template.ts` to populate the template.
-8. Continue with SharePoint record creation.
+## Procesamiento secuencial de registros
 
-The export script writes data into the predefined template starting at row 15.
+### Validación del tipo de registro de origen
 
-## Sequential Record Processing
+Antes de procesar los registros, el Office Script `process-records.ts` valida los datos de Excel. Solo admite:
 
-### Source Record Type Validation
+- `T`: registro principal.
+- `B`: registro asociado.
 
-Before FL02 processes individual records, the `process-records.ts` Office Script validates the source Excel data.
+Si aparece un `RecordType` no admitido, el script genera un error que identifica la fila afectada. La extracción falla y FL02 debe tratarlo como un error de procesamiento a nivel de documento. Por tanto, los tipos no admitidos **no se omiten silenciosamente**.
 
-Only two record types are supported:
+Este error de validación no incrementa `SharePointErrors` ni `RecordsWithErrors`, porque no se ha intentado crear ningún registro en SharePoint.
 
-- `T`: Primary record.
-- `B`: Associated record.
-
-If a record contains an unsupported `RecordType`, the Office Script throws an error identifying the affected row.
-
-The Excel extraction fails, and FL02 must handle this as a document-level processing error.
-
-Unsupported record types are therefore not silently skipped during normal processing.
-
-This validation error does not increment `SharePointErrors` or `RecordsWithErrors`, because no SharePoint record creation was attempted.
-
-The workflow distinguishes two types of records:
-
-| Record Type | Description |
+| Tipo | Descripción |
 |---|---|
-| T | Primary record |
-| B | Associated record |
+| `T` | Registro principal. |
+| `B` | Registro asociado. |
 
-Records are processed sequentially, with concurrency limited to one iteration at a time.
+Los registros se procesan en orden, con una concurrencia limitada a **una iteración cada vez**, para conservar las relaciones entre registros principales y asociados.
 
-This preserves the source order and allows associated records to reference the correct primary record.
+### Diagrama de relaciones
 
-### Record Relationship Diagram
 ```mermaid
 flowchart TD
-    A["Process next Excel record"] --> B["Find matching center"]
-    B --> C{"Record type = T?"}
+    A["Procesar siguiente registro Excel"] --> B["Buscar centro correspondiente"]
+    B --> C{"¿Tipo = T?"}
 
-    C -->|Yes| D["Reset LastPrimaryRecordId to 0"]
-    D --> E["Reset LastPrimaryReferenceCode"]
-    E --> F["Create primary SharePoint item"]
-    F --> G{"Creation successful?"}
+    C -->|Sí| D["Restablecer LastPrimaryRecordId a 0"]
+    D --> E["Vaciar LastPrimaryReferenceCode"]
+    E --> F["Crear elemento principal en SharePoint"]
+    F --> G{"¿Creación correcta?"}
 
-    G -->|Yes| H["Increment RecordsCreated"]
-    H --> I["Save LastPrimaryRecordId"]
-    I --> J["Save LastPrimaryReferenceCode"]
+    G -->|Sí| H["Incrementar RecordsCreated"]
+    H --> I["Guardar LastPrimaryRecordId"]
+    I --> J["Guardar LastPrimaryReferenceCode"]
 
-    G -->|No| K["Increment SharePointErrors"]
-    K --> L["Append creation error details"]
+    G -->|No| K["Incrementar SharePointErrors"]
+    K --> L["Añadir detalles del error"]
 
-    C -->|No| M{"Record type = B?"}
-    M -->|No| N["Unexpected record type: validation error"]
-    M -->|Yes| O{"LastPrimaryRecordId > 0?"}
+    C -->|No| M{"¿Tipo = B?"}
+    M -->|No| N["Tipo inesperado: error de validación"]
+    M -->|Sí| O{"¿LastPrimaryRecordId > 0?"}
 
-    O -->|No| P["Skip associated record and add diagnostic"]
-    O -->|Yes| Q{"ReferenceCode matches LastPrimaryReferenceCode?"}
+    O -->|No| P["Omitir asociado y añadir diagnóstico"]
+    O -->|Sí| Q{"¿ReferenceCode coincide con LastPrimaryReferenceCode?"}
 
     Q -->|No| P
-    Q -->|Yes| R["Create associated item with ParentRecordId"]
-    R --> S{"Creation successful?"}
+    Q -->|Sí| R["Crear asociado con ParentRecordId"]
+    R --> S{"¿Creación correcta?"}
 
-    S -->|Yes| T["Increment RecordsCreated"]
-    S -->|No| U["Increment SharePointErrors"]
-    U --> V["Append creation error details"]
+    S -->|Sí| T["Incrementar RecordsCreated"]
+    S -->|No| U["Incrementar SharePointErrors"]
+    U --> V["Añadir detalles del error"]
 
-    J --> W["Continue to next record"]
+    J --> W["Continuar con siguiente registro"]
     L --> W
     P --> W
     T --> W
     V --> W
 
-    N --> X["Stop processing and report validation error"]
-
+    N --> X["Detener procesamiento y comunicar error de validación"]
 ```
 
+## Identificador compuesto de familia
 
-## Composite Family Identifier
-
-The workflow constructs a family identifier by combining the source SharePoint file ID and the `ReferenceCode` extracted from Excel.
-
-Example:
+El flujo construye un identificador de familia combinando el ID del archivo de origen en SharePoint y el `ReferenceCode` extraído de Excel.
 
 ```text
 SourceFileId = 125
@@ -318,216 +276,176 @@ ReferenceCode = FAM003
 CompositeFamilyId = 125-FAM003
 ```
 
-This helps distinguish records originating from different source files.
+Esto permite distinguir registros procedentes de archivos diferentes.
 
-## Record Ordering and Relationship Validation
+## Orden y validación de relaciones
 
-FL02 processes Excel records sequentially, with concurrency set to one.
+FL02 procesa los registros secuencialmente, con concurrencia igual a uno. La implementación conceptual supone que cada registro principal (`T`) aparece **antes** de sus asociados (`B`).
 
-The current conceptual implementation assumes that each primary record (`T`) appears before its associated records (`B`).
+Para crear un asociado deben cumplirse dos condiciones:
 
-For an associated record to be created:
+1. `LastPrimaryRecordId` debe ser mayor que cero.
+2. Su `ReferenceCode` debe coincidir con `LastPrimaryReferenceCode`.
 
-1. `LastPrimaryRecordId` must be greater than zero.
-2. Its `ReferenceCode` must match `LastPrimaryReferenceCode`.
+Si no se cumple alguna, se omite el registro asociado y se añade una entrada de diagnóstico. Los registros omitidos no incrementan `SharePointErrors`, ya que no se ha intentado crearlos.
 
-If either condition fails, the associated record is skipped and a diagnostic entry is added.
+### Ejemplo
 
-Skipped records do not increment `SharePointErrors`, because no SharePoint creation operation was attempted.
-
-### Example
-
-| Order | Type | ReferenceCode | Expected Behavior |
+| Orden | Tipo | ReferenceCode | Comportamiento esperado |
 |---|---|---|---|
-| 1 | T | FAM001 | Create primary record and save its ID |
-| 2 | B | FAM001 | Associate with FAM001 primary record |
-| 3 | B | FAM002 | Skip because the reference does not match |
-| 4 | T | FAM002 | Create new primary record |
-| 5 | B | FAM002 | Associate with FAM002 primary record |
+| 1 | T | FAM001 | Crear principal y guardar su ID. |
+| 2 | B | FAM001 | Asociar al principal FAM001. |
+| 3 | B | FAM002 | Omitir porque no coincide la referencia. |
+| 4 | T | FAM002 | Crear nuevo principal. |
+| 5 | B | FAM002 | Asociar al principal FAM002. |
 
-### Known Limitation
+### Limitación conocida
 
-The current design does not support associated records appearing before their corresponding primary records.
+El diseño actual no admite asociados que aparezcan antes de su principal ni busca principales previamente creados mediante `ReferenceCode`. Una mejora futura podría mantener un mapa entre `ReferenceCode` e IDs de SharePoint para permitir cualquier orden de entrada.
 
-It also does not search previously created primary records by `ReferenceCode`.
+## Seguimiento de errores
 
-A future implementation could maintain a mapping between `ReferenceCode` and SharePoint item IDs to support records in any order.
+El flujo mantiene un contador de errores de creación en SharePoint, una matriz con sus detalles, un contador de registros creados correctamente y un resumen con referencia, registros creados, errores y diagnóstico. Las ramas de éxito y fallo contabilizan sus resultados por separado.
 
-## Error Tracking
+### Modelo de contabilización
 
-The workflow maintains:
-
-- A counter for SharePoint record creation errors.
-- An array containing error details.
-- A counter for successfully created records.
-- A processing summary containing the reference ID, created records, errors, and error details.
-
-Separate branches track successful and failed record creation operations.
-
-### Error Counting Model
-
-The workflow counts errors occurring during SharePoint record creation.
-
-| Metric | Definition |
+| Métrica | Definición |
 |---|---|
-| SharePointErrors | Number of failed record creation operations in the Processed Records List |
-| RecordsWithErrors | Number of records whose creation in SharePoint failed |
-| ErrorDetails | Diagnostic information describing SharePoint record creation failures |
-| RecordsCreated | Number of successfully created SharePoint records |
+| `SharePointErrors` | Número de operaciones fallidas de creación en la lista de registros procesados. |
+| `RecordsWithErrors` | Número de registros cuya creación en SharePoint falló. |
+| `ErrorDetails` | Información de diagnóstico de los fallos de creación. |
+| `RecordsCreated` | Número de registros creados correctamente. |
 
-In this demonstration, each failed record creation operation corresponds to one failed record.
-
-Therefore:
+En esta demostración, cada operación fallida corresponde a un registro fallido:
 
 `RecordsWithErrors = SharePointErrors`
 
-Excel validation errors, unsupported record types, and general workflow failures are not included in RecordsWithErrors.
+Los errores de validación de Excel, los tipos de registro no admitidos y los fallos generales del flujo no se incluyen en `RecordsWithErrors`. FL02 pasa el contador `SharePointErrors` directamente a FL04 como `RecordsWithErrors`, y FL04 utiliza este valor junto con `RecordsCreated` para determinar el estado de ejecución.
 
-FL02 passes the SharePointErrors counter directly to FL04 as RecordsWithErrors.
+### Errores a nivel de documento
 
-FL04 uses this value together with RecordsCreated to determine the processing status.
+El estado del archivo de origen se gestiona independientemente del estado de ejecución de FL04. Si existen errores de creación, el documento se marca como `Error` aunque se hayan creado algunos registros. Los fallos de procesamiento de Excel o de registro en FL04 también deben tratarse en la rama de errores del documento; no se incluyen automáticamente en `RecordsWithErrors`.
 
-### Document-Level Error Handling
+## Integración con FL04
 
-The source document status is managed independently from the FL04 processing status.
+FL02 invoca FL04 como flujo secundario y le transmite **ocho parámetros**:
 
-If SharePoint record creation errors occur, the source document is marked as `Error`, even when some records were created successfully.
-
-Failures in Excel processing or FL04 logging must also be handled by the document-level error branch.
-
-These failures are not automatically included in the `RecordsWithErrors` counter.
-
-## Integration with FL04
-
-FL02 invokes FL04 as a child flow and passes eight input parameters:
-
-| Parameter | Purpose |
+| Parámetro | Finalidad |
 |---|---|
-| ProcessingReferenceId | Identifies the processing operation |
-| SourceFileId | Identifies the source file |
-| SourceFileName | Identifies the processed workbook |
-| RecordsRead | Number of records read |
-| RecordsCreated | Number of records created |
-| RecordsWithErrors | Number of SharePoint record creation errors |
-| ErrorDetails | Processing error details |
-| ExecutionId | Flow execution identifier |
+| `ProcessingReferenceId` | Identifica la operación de procesamiento. |
+| `SourceFileId` | Identifica el archivo de origen. |
+| `SourceFileName` | Identifica el libro procesado. |
+| `RecordsRead` | Número de registros leídos. |
+| `RecordsCreated` | Número de registros creados. |
+| `RecordsWithErrors` | Número de errores de creación en SharePoint. |
+| `ErrorDetails` | Detalles de los errores de procesamiento. |
+| `ExecutionId` | Identificador de ejecución del flujo. |
 
-FL04 creates a SharePoint log entry and returns its ID as `Id_Log`.
+FL04 crea un elemento en la lista de registros de procesamiento y devuelve su ID como `Id_Log`.
 
-### FL04 Child Flow Input Contract
+### Contrato de entrada del flujo secundario FL04
 
-The conceptual workflow defines eight input mappings:
+El flujo conceptual documenta ocho correspondencias:
 
-| Parameter | FL02 Source |
+| Parámetro | Origen en FL02 |
 |---|---|
-| ProcessingReferenceId | CurrentProcessingReferenceId |
-| SourceFileId | TriggerFileId |
-| SourceFileName | TriggerFileName |
-| RecordsRead | CalculatedRecordsRead |
-| RecordsCreated | RecordsCreated |
-| RecordsWithErrors | SharePointErrors |
-| ErrorDetails | ConsolidatedErrorDetails |
-| ExecutionId | CurrentFlowExecutionId |
+| `ProcessingReferenceId` | `CurrentProcessingReferenceId` |
+| `SourceFileId` | `TriggerFileId` |
+| `SourceFileName` | `TriggerFileName` |
+| `RecordsRead` | `CalculatedRecordsRead` |
+| `RecordsCreated` | `RecordsCreated` |
+| `RecordsWithErrors` | `SharePointErrors` |
+| `ErrorDetails` | `ConsolidatedErrorDetails` |
+| `ExecutionId` | `CurrentFlowExecutionId` |
 
-### Error Counting and Status
+### Contabilización de errores y estados
 
-In this demonstration, `RecordsWithErrors` represents the number of failed SharePoint record creation operations.
-
-Each failed operation corresponds to one failed record.
-
-Therefore:
+Aquí `RecordsWithErrors` representa operaciones fallidas de creación en SharePoint, una por registro fallido:
 
 `RecordsWithErrors = SharePointErrors`
 
-Excel validation errors, unsupported record types, and general workflow failures are excluded from this counter.
+Los errores de validación de Excel, tipos no admitidos y fallos generales se excluyen de este contador.
 
-FL04 determines the processing status using `RecordsCreated` and `RecordsWithErrors`:
+FL04 determina el estado con `RecordsCreated` y `RecordsWithErrors`:
 
-| Status | Condition |
+| Estado | Condición |
 |---|---|
-| Success | RecordsCreated > 0 AND RecordsWithErrors = 0 |
-| Partial Success | RecordsCreated > 0 AND RecordsWithErrors > 0 |
-| Error | RecordsCreated = 0 AND RecordsWithErrors > 0 |
-| No Records | RecordsCreated = 0 AND RecordsWithErrors = 0 |
+| `Success` | `RecordsCreated > 0` y `RecordsWithErrors = 0`. |
+| `Partial Success` | `RecordsCreated > 0` y `RecordsWithErrors > 0`. |
+| `Error` | `RecordsCreated = 0` y `RecordsWithErrors > 0`. |
+| `No Records` | `RecordsCreated = 0` y `RecordsWithErrors = 0`. |
 
-These statuses describe SharePoint record creation outcomes and do not replace the source document lifecycle status.
+Estos estados describen los resultados de creación en SharePoint y no sustituyen los estados del ciclo de vida del documento.
 
-### Child Flow Output
+### Salida del flujo secundario
 
-FL04 creates a record in the `Processing Logs List` and returns its SharePoint item ID as `Id_Log`.
+FL04 crea un elemento en `Processing Logs List` y devuelve su ID de SharePoint como `Id_Log`.
 
-### Implementation Note
+### Nota de implementación
 
-All eight input mappings are explicitly documented in `FL02-demo.json`.
+Las ocho correspondencias están documentadas explícitamente en `FL02-demo.json`. El JSON representa la integración conceptual entre FL02 y FL04; **no es una definición importable ni ejecutable**.
 
-The JSON describes the conceptual integration between FL02 and FL04. It is not an importable or executable Power Automate flow definition.
+Una implementación real debe configurar las acciones y expresiones correspondientes, validar los valores requeridos antes de llamar a FL04 y tratar los errores que impidan ejecutar el flujo secundario.
 
-A production implementation would need to implement these mappings using actual Power Automate actions and expressions, including validation of the required values before invoking FL04.
+## Flujos relacionados
 
-Error handling must also account for failures that prevent FL04 from executing.
-
-## Related Workflows
-
-| Flow | Relationship |
+| Flujo | Relación |
 |---|---|
-| FL01 | Prepares documents for validation |
-| FL03 | Cleans up temporary files older than 8 hours |
-| FL04 | Receives processing results and creates execution logs |
-| FL05 | Applies dynamic permissions to newly created SharePoint records |
+| FL01 | Prepara los documentos para su validación. |
+| FL03 | Elimina archivos temporales con más de ocho horas. |
+| FL04 | Recibe resultados y crea registros de ejecución. |
+| FL05 | Aplica permisos dinámicos a los nuevos registros de SharePoint. |
 
-FL03 operates independently on a schedule, while FL04 is directly invoked by FL02.
+FL03 funciona de forma independiente y programada; FL04 es invocado directamente por FL02.
 
+## Tecnologías
 
-## Technologies
+- Microsoft Power Automate.
+- SharePoint Online.
+- Excel Online (Business).
+- Office Scripts.
+- TypeScript.
+- JSON.
+- Gestión de permisos de SharePoint.
+- Mermaid.
 
-- Microsoft Power Automate
-- SharePoint Online
-- Excel Online (Business)
-- Office Scripts
-- TypeScript
-- JSON
-- SharePoint permission management
-- Mermaid
+## Aspectos técnicos destacados
 
-## Technical Highlights
+- Automatización basada en metadatos.
+- Gestión del ciclo de vida documental y permisos.
+- Cuatro estados de procesamiento dentro de un ciclo documental de cinco estados: `Validated`, `Processing`, `Processed` y `Error`.
+- Orquestación de Office Scripts.
+- Generación de exportaciones Excel.
+- Procesamiento secuencial y relaciones principal-asociado.
+- Identificadores compuestos.
+- Seguimiento de errores mediante matrices.
+- Contabilización de errores de creación en SharePoint.
+- Integración reutilizable con flujos secundarios.
+- Registro centralizado de ejecuciones mediante FL04.
+- Ramas conceptuales de éxito y error.
 
-- Metadata-driven automation.
-- Document lifecycle and permission management.
-- Four processing-stage statuses within the five-state document lifecycle: Validated, Processing, Processed, Error.
-- Office Scripts orchestration.
-- Excel export generation.
-- Sequential processing and parent-child record relationships.
-- Composite identifiers.
-- Array-based error tracking.
-- SharePoint record creation error counting.
-- Reusable child flow integration.
-- Centralized execution logging through FL04.
-- Conceptual success and error handling branches.
+## Estado de implementación
 
-## Implementation Status
+**Demostración conceptual. No es un flujo importable en Power Automate.**
 
-**Conceptual demonstration. Not an importable Power Automate flow.**
+`FL02-demo.json` representa la arquitectura del flujo y no contiene definiciones ejecutables de acciones de Power Automate. La documentación describe el comportamiento previsto, las condiciones de inicio, las operaciones de procesamiento, el seguimiento de errores, las transiciones de estado y la integración con FL04.
 
-The `FL02-demo.json` file represents the workflow architecture and does not contain executable Power Automate action definitions.
+Una implementación en producción requeriría:
 
-The demonstration documents the intended behavior of the workflow, including trigger conditions, processing operations, error tracking, document status transitions, and child flow integration.
+- Configurar desencadenadores y acciones reales de Power Automate.
+- Implementar las condiciones y expresiones descritas.
+- Configurar la ejecución secuencial de registros.
+- Implementar excepciones con `Scope` y `Configure run after`.
+- Validar los esquemas de listas y bibliotecas SharePoint.
+- Probar los Office Scripts con las plantillas Excel previstas.
+- Probar las transiciones de estado y la recuperación de errores.
+- Verificar la ejecución de FL04 y el tratamiento de su respuesta.
 
-A production implementation would require:
+## Seguridad
 
-- Configuring actual Power Automate triggers and actions.
-- Implementing the described conditions and expressions.
-- Configuring sequential execution for record processing.
-- Implementing exception handling with Scopes and Configure run after.
-- Validating the SharePoint list and library schemas.
-- Testing Office Scripts with the expected Excel templates.
-- Testing document status transitions and error recovery.
-- Verifying FL04 child flow execution and output handling.
-
-## Security
-
-- Fictional SharePoint site and list names.
-- Fictional records and identifiers.
-- No real user data.
-- No credentials or corporate URLs.
-- No proprietary solution exports.
-- Conceptual SharePoint permissions documented for demonstration purposes.
+- Nombres ficticios de sitios y listas SharePoint.
+- Registros e identificadores ficticios.
+- Sin datos personales reales.
+- Sin credenciales ni direcciones corporativas.
+- Sin exportaciones de soluciones propietarias.
+- Permisos conceptuales de SharePoint documentados con fines demostrativos.
