@@ -1,78 +1,77 @@
+# Documentación técnica
 
-# Technical Documentation
+Este directorio sirve como índice de la documentación técnica del proyecto de demostración de automatización de SharePoint y Excel.
 
-This directory serves as the technical documentation index for the SharePoint & Excel Automation Pipeline demonstration project.
+El proyecto presenta una solución conceptual de Microsoft Power Platform que integra Power Automate, SharePoint Online, Excel Online y Office Scripts.
 
-The project showcases a conceptual Microsoft Power Platform solution integrating Power Automate, SharePoint Online, Excel Online, and Office Scripts.
+Todos los recursos utilizan datos ficticios y configuraciones genéricas.
 
-All resources are based on fictional data and generic configurations.
+## Arquitectura de la solución
 
-## Solution Architecture
+La solución incluye cinco flujos conceptuales de Power Automate, dos Office Scripts y una estructura de SharePoint documentada.
 
-The solution includes five conceptual Power Automate workflows, two Office Scripts, and a documented SharePoint structure.
+### Arquitectura de SharePoint
 
-### SharePoint Architecture
+- [Descripción general de SharePoint](../Sharepoint/README.md)
+- [Arquitectura de sitios](../Sharepoint/architecture/sites-architecture.md)
+- [Sitio principal](../Sharepoint/sites/main-site.md)
+- [Subsitio de gestión](../Sharepoint/sites/management-subsite.md)
 
-- [SharePoint Overview](../Sharepoint/README.md)
-- [Site Architecture](../Sharepoint/architecture/sites-architecture.md)
-- [Main Site](../Sharepoint/sites/main-site.md)
-- [Management Subsite](../Sharepoint/sites/management-subsite.md)
+### Flujos de Power Automate
 
-### Power Automate Workflows
-
-| Workflow | Description | Documentation |
+| Flujo | Descripción | Documentación |
 |---|---|---|
-| FL01 | Document intake and permissions | [FL01](../flows/FL01-demo/README.md) |
-| FL02 | Excel processing and SharePoint record creation | [FL02](../flows/FL02-demo/README.md) |
-| FL03 | Scheduled temporary file cleanup | [FL03](../flows/FL03-demo/README.md) |
-| FL04 | Centralized processing logs | [FL04](../flows/FL04-demo/README.md) |
-| FL05 | Dynamic record-level permissions | [FL05](../flows/FL05-demo/README.md) |
+| FL01 | Recepción de documentos y gestión de permisos | [FL01](../flows/FL01-demo/README.md) |
+| FL02 | Procesamiento de Excel y creación de registros en SharePoint | [FL02](../flows/FL02-demo/README.md) |
+| FL03 | Limpieza programada de archivos temporales | [FL03](../flows/FL03-demo/README.md) |
+| FL04 | Registro centralizado de ejecuciones de procesamiento | [FL04](../flows/FL04-demo/README.md) |
+| FL05 | Permisos dinámicos a nivel de registro | [FL05](../flows/FL05-demo/README.md) |
 
-These workflows are conceptual demonstrations, not importable Power Automate flow definitions.
+Estos flujos son demostraciones conceptuales, no definiciones de flujos importables directamente en Power Automate.
 
 ### Office Scripts
 
-- [Process Excel Records](../office-scripts/process-records.ts)
-- [Populate Export Template](../office-scripts/populate-export-template.ts)
+- [Procesamiento de registros de Excel](../office-scripts/process-records.ts)
+- [Cumplimentación de la plantilla de exportación](../office-scripts/populate-export-template.ts)
 
-The scripts demonstrate Excel data extraction and export workbook population.
+Los scripts muestran cómo extraer datos de Excel y rellenar un libro de exportación.
 
-### Sample Data
+### Datos de ejemplo
 
-- [Sample Records](../sample-data/sample-records.xlsx)
-- [Export Template](../sample-data/export-template.xlsx)
-- [Sample Data Documentation](../sample-data/README.md)
+- [Registros de ejemplo](../sample-data/sample-records.xlsx)
+- [Plantilla de exportación](../sample-data/export-template.xlsx)
+- [Documentación de los datos de ejemplo](../sample-data/README.md)
 
-### SharePoint Components
+### Componentes de SharePoint
 
-The documented SharePoint solution includes:
+La solución de SharePoint documentada incluye:
 
-- Four document libraries
-- Four SharePoint lists
-- One example form configuration
-- Two JSON formatting examples
-- Site structure and permission documentation
+- Cuatro bibliotecas de documentos.
+- Cuatro listas de SharePoint.
+- Un ejemplo de configuración de formulario.
+- Dos ejemplos de formato JSON.
+- Documentación sobre la estructura de sitios y los permisos.
 
-See the [SharePoint documentation](../Sharepoint/README.md) for component details.
+Consulta la [documentación de SharePoint](../Sharepoint/README.md) para conocer los detalles de cada componente.
 
-## Implementation Scope
+## Alcance de la implementación
 
-This repository documents a fictional reference architecture.
+Este repositorio documenta una arquitectura de referencia ficticia.
 
-The Power Automate JSON files describe conceptual workflow structures and are not directly importable into Power Automate.
+Los archivos JSON de Power Automate describen estructuras conceptuales de flujos y no se pueden importar directamente en Power Automate.
 
-The Office Scripts are provided as TypeScript examples.
+Los Office Scripts se proporcionan como ejemplos en TypeScript.
 
-A production deployment would require environment-specific configuration, connector authentication, permissions, testing, and implementation of the actual Power Automate actions.
+Una implantación en producción requeriría configuración específica del entorno, autenticación de conectores, permisos, pruebas e implementación de las acciones reales de Power Automate.
 
-## Security and Privacy
+## Seguridad y privacidad
 
-- Fictional records and identifiers
-- Generic SharePoint configurations
-- No real corporate information
-- No credentials or secrets
-- No proprietary solution exports
+- Registros e identificadores ficticios.
+- Configuraciones genéricas de SharePoint.
+- Sin información corporativa real.
+- Sin credenciales ni secretos.
+- Sin exportaciones de soluciones propietarias.
 
-## Project Overview
+## Descripción general del proyecto
 
-Return to the [main project README](../README.md).
+Volver al [README principal del proyecto](../README.md).
