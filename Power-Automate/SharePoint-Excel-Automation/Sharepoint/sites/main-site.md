@@ -1,267 +1,259 @@
+# Sitio principal de SharePoint
 
-# Main SharePoint Site
+## 1. Descripción general
 
-## 1. Overview
+El sitio principal de SharePoint es el punto de entrada de una solución de recepción y procesamiento documental desarrollada con SharePoint Online y Power Automate.
 
-The Main SharePoint Site serves as the entry point for a document intake and processing solution built with SharePoint Online and Power Automate.
+Ofrece un entorno controlado donde el personal externo autorizado puede presentar solicitudes y acceder a los documentos generados que le correspondan.
 
-It provides a controlled environment where authorized external staff can submit requests and access relevant generated documents.
+Un subsitio de gestión permite realizar las operaciones internas de validación, procesamiento y supervisión.
 
-A Management Subsite supports the internal validation, processing, and monitoring operations.
+> **Aviso sobre el portfolio:** Esta documentación utiliza nombres ficticios y describe una demostración conceptual. No contiene URL de producción, identificadores reales de grupos, credenciales ni información confidencial.
 
-> **Portfolio disclaimer:** This documentation uses fictional names and describes a conceptual demonstration. No production URLs, real group IDs, credentials, or confidential information are included.
-
-## 2. Site Structure
+## 2. Estructura del sitio
 
 ```text
-Main SharePoint Site
+Sitio principal de SharePoint
 |
-|-- Request Intake List
-|   |-- Customized New Item Form
-|   `-- Command Bar JSON Formatting
+|-- Lista de recepción de solicitudes
+|   |-- Formulario personalizado de nuevo elemento
+|   `-- Formato JSON de la barra de comandos
 |
-|-- Derived Documents Library
+|-- Biblioteca de documentos derivados
 |
-`-- Management Subsite
-    `-- Internal processing and administration
+`-- Subsitio de gestión
+    `-- Procesamiento y administración internos
 ```
 
-## 3. User Access
+## 3. Acceso de usuarios
 
-The site supports different user roles.
+El sitio contempla distintos roles de usuario.
 
-| User Role | Purpose |
+| Rol de usuario | Finalidad |
 |---|---|
-| External Staff | Submit requests and access authorized documents |
-| Site Owners | Site management and administration |
-| Site Members | Internal operational activities |
-| Site Collection Administrators | Administrative control over the site collection |
+| Personal externo | Presentar solicitudes y acceder a documentos autorizados |
+| Site Owners | Gestión y administración del sitio |
+| Site Members | Operaciones internas |
+| Administradores de la colección de sitios | Control administrativo sobre la colección de sitios |
 
-Access to individual resources is controlled through SharePoint permissions.
+El acceso a cada recurso se controla mediante permisos de SharePoint.
 
-The exact permissions for each list and library are documented separately.
+Los permisos concretos de cada lista y biblioteca se documentan por separado.
 
-## 4. Request Intake List
+## 4. Lista de recepción de solicitudes
 
-### 4.1 Purpose
+### 4.1 Finalidad
 
-The Request Intake List provides a structured mechanism for collecting requests from authorized external staff.
+La lista de recepción de solicitudes proporciona un mecanismo estructurado para recopilar solicitudes del personal externo autorizado.
 
-Users create new requests through a customized SharePoint form.
+Los usuarios crean solicitudes mediante un formulario personalizado de SharePoint.
 
+### 4.2 Presentación de solicitudes
 
-### 4.2 Request Submission
+La lista ofrece un proceso simplificado para el personal externo autorizado.
 
-The Request Intake List provides a simplified submission process for authorized External Staff.
+El proceso sigue estos pasos:
 
-The process follows these steps:
+1. El usuario abre el formulario personalizado de nuevo elemento.
+2. Opcionalmente, introduce información adicional en el campo `Observations`.
+3. Adjunta un libro de Excel mediante la funcionalidad estándar de adjuntos de SharePoint.
+4. Guarda la solicitud.
+5. SharePoint crea el elemento de lista y le asigna un ID único.
+6. FL01 recupera la información de la solicitud y su adjunto Excel.
+7. FL01 crea una copia del documento en la biblioteca de documentos derivados del sitio principal.
+8. FL01 crea otra copia independiente en la biblioteca de validación del subsitio de gestión.
+9. FL01 aplica los permisos configurados al elemento de solicitud.
 
-1. The user opens the customized New Item form.
-2. The user optionally enters additional information in the `Observations` field.
-3. The user attaches an Excel workbook using the standard SharePoint attachment functionality.
-4. The user saves the request.
-5. SharePoint creates the list item and assigns a unique item ID.
-6. FL01 retrieves the request information and its Excel attachment.
-7. FL01 creates a document copy in the Derived Documents Library in the Main SharePoint Site.
-8. FL01 creates a separate document copy in the Validation Library in the Management Subsite.
-9. FL01 applies the configured request item permissions.
+### Seguridad de las solicitudes
 
-### Request Security
+Tras la presentación, FL01 interrumpe la herencia de permisos del elemento de solicitud.
 
-After submission, FL01 breaks permission inheritance on the request item.
+La persona que creó la solicitud conserva acceso de **lectura** a su solicitud.
 
-The Request Creator retains Read access to their submitted request.
+Site Owners y Site Members reciben acceso de **lectura**, mientras que el resto del personal externo y los grupos de centros quedan excluidos.
 
-Site Owners and Site Members receive Read access, while other External Staff and Center Groups are excluded.
+### Distribución documental
 
-### Document Distribution
+La biblioteca de documentos derivados permite acceso de **lectura** a los usuarios autorizados del sitio principal, incluido el personal externo.
 
-The Derived Documents Library provides Read access to authorized Main Site users, including External Staff.
+La biblioteca de validación está restringida a los usuarios de gestión autorizados y permite continuar el ciclo de validación y procesamiento.
 
-The Validation Library is restricted to authorized management users and supports the subsequent validation and processing lifecycle.
+La estructura detallada de las solicitudes, la configuración del formulario y los permisos se describen en la documentación de la lista de recepción de solicitudes.
 
-The detailed request structure, form configuration, and permissions are documented in the Request Intake List documentation.
+### 4.3 Formulario personalizado
 
+La lista utiliza la personalización de formularios JSON de SharePoint para ofrecer una interfaz simplificada.
 
-### 4.3 Customized Form
+El formulario se organiza en torno a dos campos:
 
-The Request Intake List uses SharePoint JSON form customization to provide a simplified request submission interface.
+- **Observations:** campo opcional de texto de varias líneas para información adicional.
+- **Attachments:** funcionalidad estándar de adjuntos de listas de SharePoint, utilizada para enviar libros de Excel.
 
-The form is designed around two fields:
+La configuración de demostración está disponible en el repositorio:
 
-- **Observations:** An optional multiple-lines-of-text field for additional information.
-- **Attachments:** The standard SharePoint list attachment functionality, used to submit Excel workbooks.
+[Ver JSON del formulario de recepción de solicitudes](../forms/request-intake-form.json)
 
-The demonstration form configuration is available in the repository:
+Este JSON representa un ejemplo conceptual de distribución del formulario. Debe comprobarse su compatibilidad con el control nativo de adjuntos de SharePoint en un entorno de demostración.
 
-[View Request Intake Form JSON](../forms/request-intake-form.json)
+La personalización del formulario es independiente del formato de la barra de comandos y no sustituye los permisos ni las reglas de validación de SharePoint.
 
-This JSON represents a conceptual form layout example. Its compatibility with the native SharePoint attachment control must be verified in a demonstration environment.
+### 4.4 Formato de la barra de comandos
 
-Form customization is separate from command bar formatting and does not replace SharePoint permissions or validation rules.
+La lista utiliza formato JSON de SharePoint para personalizar los comandos disponibles.
 
-
-### 4.4 Command Bar Formatting
-
-The list uses SharePoint JSON formatting to customize available commands.
-
-The demonstration configuration is stored in:
+La configuración de demostración se encuentra en:
 
 `../formatting/request-intake-view.json`
 
-This customization provides a more focused request submission interface.
+Esta personalización ofrece una interfaz más centrada en la presentación de solicitudes.
 
-> Command bar formatting improves usability but does not replace SharePoint security permissions.
+> El formato de la barra de comandos mejora la usabilidad, pero no sustituye los permisos de seguridad de SharePoint.
 
+## 5. Biblioteca de documentos derivados
 
-## 5. Derived Documents Library
+### 5.1 Finalidad
 
-### 5.1 Purpose
+La biblioteca de documentos derivados se encuentra en el sitio principal de SharePoint.
 
-The Derived Documents Library is located in the Main SharePoint Site.
+Almacena una copia de cada libro de Excel presentado, creada por FL01 durante la recepción documental.
 
-It stores a copy of each submitted Excel workbook created by FL01 during the document intake process.
+Esta biblioteca proporciona un espacio de consulta para los usuarios autorizados del sitio principal.
 
-This library provides a consultation area for authorized users of the Main SharePoint Site.
+### 5.2 Creación de documentos
 
-### 5.2 Document Creation
+FL01 crea la copia después de recuperar el adjunto Excel de la lista de recepción de solicitudes.
 
-FL01 creates the document copy after retrieving the Excel attachment from the Request Intake List.
+El flujo utiliza una conexión de SharePoint con los permisos adecuados para crear documentos en la biblioteca.
 
-The workflow uses an appropriately authorized SharePoint connection to create documents in the library.
+El adjunto original permanece asociado a su elemento de lista de SharePoint.
 
-The original request attachment remains associated with its SharePoint list item.
+También se crea una copia independiente en la biblioteca de validación del subsitio de gestión.
 
-A separate copy is also created in the Validation Library in the Management Subsite.
+### 5.3 Modelo de acceso
 
-### 5.3 Access Model
+La biblioteca de documentos derivados proporciona acceso de **lectura** a los usuarios autorizados del sitio principal.
 
-The Derived Documents Library provides Read access to authorized Main SharePoint Site users.
-
-| User Role | Access |
+| Rol de usuario | Acceso |
 |---|---|
-| Site Collection Administrators | Administrative control |
-| Site Owners | Read |
-| Site Members | Read |
-| External Staff | Read |
-| Center Groups | According to Main Site assignment |
+| Administradores de la colección de sitios | Control administrativo |
+| Site Owners | Lectura |
+| Site Members | Lectura |
+| Personal externo | Lectura |
+| Grupos de centros | Según la asignación en el sitio principal |
 
-Ordinary users do not require Edit permissions to consult the documents.
+Los usuarios ordinarios no necesitan permisos de edición para consultar los documentos.
 
-Document creation and management operations are performed through the authorized automation connection.
+Las operaciones de creación y administración documental se realizan mediante la conexión de automatización autorizada.
 
-### 5.4 Library Customization
+### 5.4 Personalización de la biblioteca
 
-The solution includes a demonstration of SharePoint document library command bar formatting.
+La solución incluye una demostración de personalización de la barra de comandos de bibliotecas de SharePoint.
 
-The corresponding JSON file is available at:
+El archivo JSON correspondiente se encuentra en:
 
 `../formatting/document-library-commandbar.json`
 
-Command bar formatting improves the user interface but does not replace SharePoint security permissions.
+El formato de la barra de comandos mejora la interfaz de usuario, pero no sustituye los permisos de seguridad de SharePoint.
 
-### 5.5 Related Documentation
+### 5.5 Documentación relacionada
 
-The detailed library configuration, document lifecycle, and permission considerations are documented in:
+La configuración detallada de la biblioteca, el ciclo documental y las consideraciones de permisos se describen en:
 
-[Derived Documents Library](../libraries/derived-documents.md)
+[Biblioteca de documentos derivados](../libraries/derived-documents.md)
 
+## 6. Integración con Power Automate
 
+El sitio principal de SharePoint actúa como punto de entrada del ciclo automatizado de procesamiento documental.
 
-## 6. Integration with Power Automate
+La solución utiliza cinco flujos conceptuales de Power Automate.
 
-The Main SharePoint Site acts as the entry point for the automated document processing lifecycle.
+### 6.1 Responsabilidades de los flujos
 
-The solution uses five conceptual Power Automate workflows.
-
-### 6.1 Workflow Responsibilities
-
-| Workflow | Responsibility | Main Resources |
+| Flujo | Responsabilidad | Recursos principales |
 |---|---|---|
-| FL01 | Request intake, attachment retrieval, document distribution, and request item permissions | Request Intake List, Derived Documents Library, Validation Library |
-| FL02 | Validated Excel processing, record creation, export generation, and processed document protection | Validation Library, Processed Records List, Export Library |
-| FL03 | Temporary file cleanup | Temporary processing files |
-| FL04 | Execution logging and diagnostic tracking | Processing Logs List |
-| FL05 | Center-based item-level permission assignments | Processed Records List, Centers Configuration List |
+| FL01 | Recepción de solicitudes, recuperación de adjuntos, distribución documental y permisos de los elementos de solicitud | Lista de recepción de solicitudes, biblioteca de documentos derivados, biblioteca de validación |
+| FL02 | Procesamiento de Excel validados, creación de registros, generación de exportaciones y protección de documentos procesados | Biblioteca de validación, lista de registros procesados, biblioteca de exportaciones |
+| FL03 | Limpieza de archivos temporales | Archivos temporales de procesamiento |
+| FL04 | Registro de ejecuciones y seguimiento de diagnósticos | Lista de registros de ejecución |
+| FL05 | Asignación de permisos a nivel de elemento basada en centros | Lista de registros procesados, lista de configuración de centros |
 
-### 6.2 Main Site Operations
+### 6.2 Operaciones del sitio principal
 
-The Main SharePoint Site supports the initial submission and document consultation stages.
+El sitio principal permite la presentación inicial de solicitudes y la consulta de documentos.
 
-1. External Staff submit an Excel workbook through the Request Intake List.
-2. FL01 retrieves the submitted attachment.
-3. FL01 creates a document copy in the Derived Documents Library.
-4. FL01 creates a separate document copy in the Management Subsite's Validation Library.
-5. FL01 applies the configured item-level permissions to the original request.
+1. El personal externo presenta un libro de Excel mediante la lista de recepción de solicitudes.
+2. FL01 recupera el adjunto enviado.
+3. FL01 crea una copia en la biblioteca de documentos derivados.
+4. FL01 crea otra copia en la biblioteca de validación del subsitio de gestión.
+5. FL01 aplica los permisos configurados al elemento de solicitud original.
 
-The Derived Documents Library provides Read access to authorized Main Site users.
+La biblioteca de documentos derivados proporciona acceso de **lectura** a los usuarios autorizados del sitio principal.
 
-### 6.3 Management Subsite Operations
+### 6.3 Operaciones del subsitio de gestión
 
-The Management Subsite handles the subsequent internal processing lifecycle.
+El subsitio de gestión se encarga del ciclo posterior de procesamiento interno.
 
-- Authorized management users validate submitted documents.
-- FL02 processes validated Excel files and creates primary and associated records.
-- FL02 generates export workbooks and protects processed source documents.
-- FL04 records execution information and returns the `Id_Log` identifier.
-- FL05 assigns record-level permissions based on the configured center.
-- FL03 removes temporary files according to the configured cleanup rules.
+- Los usuarios autorizados de gestión validan los documentos recibidos.
+- FL02 procesa los archivos Excel validados y crea registros principales y asociados.
+- FL02 genera libros de exportación y protege los documentos de origen procesados.
+- FL04 registra la información de ejecución y devuelve el identificador `Id_Log`.
+- FL05 asigna permisos a nivel de registro según el centro configurado.
+- FL03 elimina archivos temporales de acuerdo con las reglas de limpieza establecidas.
 
-### 6.4 Security and Automation Connections
+### 6.4 Seguridad y conexiones de automatización
 
-Power Automate workflows use appropriately authorized connections to perform SharePoint operations.
+Los flujos de Power Automate utilizan conexiones con los permisos adecuados para realizar operaciones en SharePoint.
 
-Ordinary user permissions remain separate from the permissions required by automation.
+Los permisos de los usuarios ordinarios se mantienen separados de los que necesita la automatización.
 
-External Staff do not receive access to the Management Subsite through the document submission process.
+El personal externo no obtiene acceso al subsitio de gestión por el hecho de presentar una solicitud.
 
-The detailed workflow definitions and documentation are available in the Power Automate section of the portfolio.
+Las definiciones y la documentación detallada de los flujos están disponibles en la sección de Power Automate del portfolio.
 
-## 7. Security Considerations
+## 7. Consideraciones de seguridad
 
-The architecture follows these principles:
+La arquitectura sigue estos principios:
 
-- External users receive access only to authorized resources.
-- Management resources are separated from the external intake interface.
-- SharePoint permissions enforce access restrictions.
-- JSON formatting is not treated as a security boundary.
-- Site collection administrators retain administrative control.
-- Production identifiers and confidential information are excluded from public documentation.
+- Los usuarios externos solo pueden acceder a los recursos autorizados.
+- Los recursos de gestión están separados de la interfaz externa de recepción.
+- Los permisos de SharePoint aplican las restricciones de acceso.
+- El formato JSON no se considera una barrera de seguridad.
+- Los administradores de la colección de sitios conservan el control administrativo.
+- La documentación pública excluye identificadores de producción e información confidencial.
 
-## 8. Related Documentation
+## 8. Documentación relacionada
 
-- [SharePoint Sites Architecture](../architecture/sites-architecture.md)
-- [SharePoint Overview](../README.md)
-- [Request Intake Command Bar Formatting](../formatting/request-intake-view.json)
-- [Document Library Command Bar Formatting](../formatting/document-library-commandbar.json)
+- [Arquitectura de sitios de SharePoint](../architecture/sites-architecture.md)
+- [Descripción general de SharePoint](../README.md)
+- [Formato de barra de comandos de recepción de solicitudes](../formatting/request-intake-view.json)
+- [Formato de barra de comandos de bibliotecas documentales](../formatting/document-library-commandbar.json)
 
+## 9. Estado de la documentación
 
-## 9. Documentation Status
+**Estado:** Documentación conceptual del sitio principal de SharePoint completada.
 
-**Status:** Conceptual Main SharePoint Site documentation complete.
+Se han documentado los siguientes componentes:
 
-The following components are documented:
+- Estructura del sitio principal y roles de usuario.
+- Configuración de la lista de recepción de solicitudes y proceso de presentación.
+- JSON del formulario personalizado de nuevo elemento.
+- Formato JSON de la barra de comandos.
+- Configuración de la biblioteca de documentos derivados y modelo de acceso.
+- Integración con los flujos FL01 a FL05 de Power Automate.
+- Permisos a nivel de elemento de las solicitudes.
+- Distribución documental entre el sitio principal y el subsitio de gestión.
+- Consideraciones de seguridad y conexiones de automatización.
 
-- Main SharePoint Site structure and user roles.
-- Request Intake List configuration and submission process.
-- Customized New Item form JSON.
-- Command bar JSON formatting.
-- Derived Documents Library configuration and access model.
-- Integration with Power Automate workflows FL01 through FL05.
-- Request item-level permissions.
-- Document distribution between the Main Site and Management Subsite.
-- Security and automation connection considerations.
+### Validación de la implementación
 
-### Implementation Validation
+Los siguientes aspectos requieren validación en un entorno de SharePoint de destino:
 
-The following aspects require validation in a target SharePoint environment:
+- Configuración del sitio principal y pertenencia a grupos.
+- Permisos efectivos del personal externo, Site Owners y Site Members.
+- Asignaciones de permisos a nivel de elemento realizadas por FL01.
+- Funcionamiento de los adjuntos nativos de SharePoint en el formulario personalizado.
+- Permisos de creación y acceso a documentos en la biblioteca de documentos derivados.
+- Permisos de las conexiones de Power Automate y comportamiento durante la ejecución.
+- Pruebas integrales de presentación de solicitudes y distribución documental.
 
-- Main Site configuration and group membership.
-- Effective permissions for External Staff, Site Owners, and Site Members.
-- Request item-level permission assignments performed by FL01.
-- Native SharePoint attachment behavior in the customized form.
-- Document creation and access permissions in the Derived Documents Library.
-- Power Automate connection permissions and execution behavior.
-- End-to-end testing of the request submission and document distribution process.
-
-This document describes a conceptual implementation and is not an automated SharePoint site provisioning template.
+Este documento describe una implementación conceptual y no constituye una plantilla de aprovisionamiento automatizado de sitios de SharePoint.
