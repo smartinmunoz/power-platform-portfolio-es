@@ -29,15 +29,17 @@ Esta condición adicional se introdujo como medida de protección durante las pr
 1. Desencadenar el flujo únicamente cuando el estado del archivo de SharePoint sea «Validado», mediante una condición de desencadenamiento.
 2. Inicializar las variables de seguimiento de errores y el identificador del último registro principal.
 3. Romper la herencia de permisos y cambiar los permisos de los validadores de Edición/Colaboración a Lectura.
-4. Actualizar el estado del archivo a «Procesado» antes de iniciar las operaciones principales de tratamiento de datos.
-5. Realizar una comprobación adicional del estado de validación para evitar procesamientos no previstos durante las pruebas.
+4. Actualizar el estado del archivo a `Processing` antes de iniciar las operaciones principales de tratamiento de datos.
+5. Realizar una comprobación adicional de las condiciones de procesamiento para evitar ejecuciones no previstas durante las pruebas.
 6. Si se cumple la condición, recuperar el archivo Excel validado y crear una copia temporal de trabajo.
 7. Ejecutar Office Scripts para extraer los registros de Excel y comprobar el resultado del script.
 8. Generar los archivos Excel de salida necesarios, incluido el archivo preparado para importar datos en una aplicación externa.
 9. Procesar los registros extraídos en Power Automate, distinguiendo entre registros principales (T) y asociados (B), y gestionar sus relaciones.
 10. Crear los registros correspondientes en la lista de SharePoint de destino.
+11. Preparar el diagnóstico final e invocar FL04 para registrar la ejecución.
+12. Cambiar el estado a `Processed` solo cuando el procesamiento y FL04 finalicen correctamente y `SharePointErrors = 0`; en caso de fallo de procesamiento, errores de creación o fallo de FL04, establecer `Error`.
 
-**Nota:** En la implementación actual, el estado «Procesado» se asigna antes de las operaciones principales. No confirma que el procesamiento haya finalizado correctamente.
+**Nota:** El estado `Processing` indica que el procesamiento ha comenzado, pero no confirma su finalización. El estado `Processed` se reserva para una ejecución completada correctamente y registrada mediante FL04.
 
 ## Procesamiento de registros
 
@@ -68,14 +70,17 @@ De este modo, estos usuarios no pueden editar el archivo durante el procesamient
 
 ## Estado del procesamiento
 
-- **Validado (`Validat`):** El archivo se ha revisado y aprobado manualmente para su procesamiento.
-- **Procesado (`Tractat`):** El archivo ha entrado en la fase de procesamiento automatizado.
+La biblioteca de validación contempla los estados documentales `Pending Validation`, `Validated`, `Processing`, `Processed` y `Error`.
 
-El flujo cambia el estado del archivo a «Procesado» antes de ejecutar las operaciones principales de tratamiento de datos.
+- **`Pending Validation`:** El archivo está pendiente de revisión manual.
+- **`Validated`:** El archivo ha sido revisado y aprobado manualmente para su procesamiento.
+- **`Processing`:** FL02 ha iniciado el procesamiento y ha protegido el documento de origen. No implica que haya finalizado.
+- **`Processed`:** El procesamiento y el registro de ejecución mediante FL04 han terminado correctamente, sin errores de creación de registros (`SharePointErrors = 0`).
+- **`Error`:** El procesamiento no ha podido completarse correctamente, se han detectado errores de creación o ha fallado el registro obligatorio mediante FL04.
 
-Este estado no garantiza que el procesamiento haya terminado correctamente.
+La secuencia de FL02 es `Validated` → `Processing` → `Processed` o `Error`. Los estados de ejecución registrados por FL04 se gestionan por separado de estos estados documentales.
 
-Los errores de procesamiento se registran por separado dentro del flujo.
+El desencadenador original utiliza el valor `Validat` en la expresión de ejemplo; este documento conserva dicha expresión sin modificarla. En una implementación real debe verificarse la correspondencia entre los valores internos de la columna de SharePoint y los estados conceptuales documentados.
 
 ## Archivos temporales
 
