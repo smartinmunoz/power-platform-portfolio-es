@@ -1,0 +1,214 @@
+
+{
+  "name": "FL02-Excel-Processing-Demo",
+  "description": "Excel processing, export generation, and related SharePoint record creation",
+  "version": "1.0",
+  "type": "demonstration",
+  "trigger": {
+    "operation": "When a file is created or modified (properties only)",
+    "condition": "FileStatus = Validated",
+    "type": "SharePoint"
+  },
+  "sharePoint": {
+    "sourceLibrary": "Validation Library",
+    "destinationList": "Processed Records List",
+    "temporaryLibrary": "Temporary Files Library",
+    "site": "https://contoso.sharepoint.com/sites/DemoSite"
+  },
+ 
+"variables": [
+  {
+    "initialValue": 0,
+    "name": "SharePointErrors",
+    "type": "integer"
+  },
+  {
+    "initialValue": 0,
+    "name": "RecordsWithErrors",
+    "type": "integer"
+  },
+
+{
+  "initialValue": 0,
+  "name": "LastPrimaryRecordId",
+  "type": "integer"
+},
+{
+  "initialValue": "",
+  "name": "LastPrimaryReferenceCode",
+  "type": "string"
+},
+  {
+    "initialValue": [],
+    "name": "ErrorDetails",
+    "type": "array"
+  },
+  {
+    "initialValue": 0,
+    "name": "RecordsCreated",
+    "type": "integer"
+  }
+],
+
+  "actions": [
+    {
+      "operation": "Break permission inheritance",
+      "name": "BreakFilePermissionInheritance"
+    },
+    {
+      "operation": "Grant Read permission",
+      "group": "Members",
+      "name": "GrantMembersReadAccess"
+    },
+    {
+      "operation": "Grant Read permission",
+      "group": "Owners",
+      "name": "GrantOwnersReadAccess"
+    },
+ 
+{
+  "operation": "Update SharePoint file properties",
+  "name": "MarkFileAsProcessing",
+  "status": "Processing",
+  "previousStatus": "Validated",
+  "note": "Set the source file status to Processing before starting Excel operations. This prevents the Validated trigger condition from matching subsequent file modifications."
+},
+    {
+      "operation": "Condition",
+      "ifFalse": [],
+      "ifTrue": [
+        "Get validated Excel file",
+        "Create temporary working copy",
+        "Run process-records.ts",
+        "Check Office Script result",
+        "Get Excel export template",
+        "Create export workbook",
+        "Run populate-export-template.ts",
+        "Process extracted records sequentially"
+      ],
+      "name": "ValidateProcessingCondition"
+    },
+    {
+      "recordTypes": {
+        "associated": "B",
+        "primary": "T"
+      },
+      "concurrency": 1,
+      "name": "ProcessExcelRecords",
+   
+"primaryRecord": [
+  "Reset LastPrimaryRecordId to 0",
+  "Reset LastPrimaryReferenceCode to an empty string",
+  "Create primary SharePoint item",
+  "If creation succeeds, increment RecordsCreated",
+  "If creation succeeds, save the created item ID in LastPrimaryRecordId",
+  "If creation succeeds, save the current record ReferenceCode in LastPrimaryReferenceCode",
+  "If creation fails, increment SharePointErrors and append creation error details"
+],
+
+      
+"familyIdentifier": "concat(SourceFileId, '-', ReferenceCode)",
+
+     
+
+"associatedRecord": [
+  "Validate associated record",
+  "Verify that LastPrimaryRecordId is greater than 0",
+  "Verify that the current record ReferenceCode matches LastPrimaryReferenceCode",
+  "If no valid primary record exists or ReferenceCode does not match, skip associated record creation and append a diagnostic entry",
+  "If both validations succeed, create associated SharePoint item with ParentRecordId set to LastPrimaryRecordId",
+  "Increment RecordsCreated if SharePoint item creation succeeds",
+  "Increment SharePointErrors and append creation error details if SharePoint item creation fails"
+],
+
+      "operation": "Apply to each"
+    },
+  {
+  "operation": "Compose",
+  "details": [
+    "Count records extracted from Excel",
+    "Count failed SharePoint record creation operations",
+    "Set RecordsWithErrors equal to SharePointErrors",
+    "Combine SharePoint creation error details"
+    ],
+    "name": "CalculateFinalDiagnostics"
+  },
+
+    {
+      "operation": "Compose JSON",
+      "properties": [
+        "ProcessingReferenceId",
+        "RecordsCreated",
+        "SharePointErrors",
+        "ErrorDetails"
+      ],
+      "name": "BuildProcessingSummary"
+    },
+    {
+      "operation": "Run child flow",
+      "childFlow": "FL04-Processing-Logs-Demo",
+      "output": "Id_Log",
+      "name": "ExecuteFL04",
+      "inputCount": 8,
+      "inputMappings": {
+        "ProcessingReferenceId": "CurrentProcessingReferenceId",
+        "SourceFileId": "TriggerFileId",
+        "SourceFileName": "TriggerFileName",
+        "RecordsRead": "CalculatedRecordsRead",
+        "RecordsCreated": "RecordsCreated",
+        "RecordsWithErrors": "SharePointErrors",
+        "ErrorDetails": "ConsolidatedErrorDetails",
+        "ExecutionId": "CurrentFlowExecutionId"
+
+      }
+    },
+    {
+      "operation": "Update SharePoint file properties",
+      "name": "MarkFileAsProcessed",
+      "status": "Processed",
+      "previousStatus": "Processing",
+      "runAfter": {
+        "ExecuteFL04": [
+          "Succeeded"
+        ]
+      },
+      "condition": "Main processing completed successfully AND SharePointErrors = 0",
+
+      "note": "Mark the source document as Processed only after successful completion of the processing workflow and FL04 logging."
+    },
+    {
+      "operation": "Update SharePoint file properties",
+      "name": "MarkFileAsError",
+      "status": "Error",
+      "previousStatus": "Processing",
+      "runAfter": {
+        "MarkFileAsProcessed": [
+          "Skipped",
+          "Failed",
+          "TimedOut"
+        ]
+      },
+      "condition": "Main processing failed OR SharePointErrors > 0 OR FL04 logging failed",
+      "note": "Mark the source document as Error when processing cannot complete successfully, when SharePoint record creation errors are detected, or when execution logging fails. The error branch must also handle failures that prevent FL04 from running."
+    }
+  ],
+
+
+  "officeScripts": [
+    "process-records.ts",
+    "populate-export-template.ts"
+  ],
+  "relatedFlows": [
+    {
+      "purpose": "Processing logs and error tracking",
+      "relationship": "Child flow invoked by FL02",
+      "id": "FL04"
+    },
+    {
+      "purpose": "Scheduled cleanup of temporary Excel files",
+      "relationship": "Separate maintenance workflow",
+      "id": "FL03"
+    }
+  ],
+  "implementationStatus": "Conceptual demonstration - Not an importable Power Automate flow"
+}

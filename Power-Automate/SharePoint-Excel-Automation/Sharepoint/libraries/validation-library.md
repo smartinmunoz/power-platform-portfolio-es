@@ -1,0 +1,247 @@
+
+# Validation Library
+
+## 1. Overview
+
+The Validation Library is a SharePoint Online document library located in the Management Subsite.
+
+It stores Excel workbooks awaiting validation and processing through Power Automate.
+
+The library implements document-level security to protect validated files against unauthorized modification.
+
+> **Portfolio disclaimer:** This documentation describes a conceptual demonstration using fictional names. No production URLs, credentials, real identifiers, or confidential information are included.
+
+## 2. Library Configuration
+
+| Property | Configuration |
+|---|---|
+| Library Name | Validation Library |
+| Location | Management Subsite |
+| Library Type | SharePoint Document Library |
+| Document Format | Excel workbooks |
+| Processing Workflow | FL02 |
+| Security Model | Library-level and file-level permissions |
+| External Staff Access | Not permitted |
+| Center Groups Access | Not permitted |
+
+
+## 3. Document Lifecycle
+
+Documents enter the Validation Library through FL01, which starts when a new request is submitted in the Main SharePoint Site.
+
+The document lifecycle is:
+
+1. An authorized user submits a request with an attached Excel workbook through the Request Intake List.
+2. FL01 retrieves the Excel attachment.
+3. FL01 creates a copy in the Derived Documents Library in the Main SharePoint Site.
+4. FL01 creates a separate copy in the Validation Library in the Management Subsite.
+5. Authorized Site Owners and Site Members review and validate the document.
+6. The document status changes to `Validated`, triggering FL02.
+7. FL02 breaks file-level permission inheritance and grants Read access to Site Owners and Site Members.
+8. FL02 updates the document status from `Validated` to `Processing`.
+9. FL02 processes the Excel data, creates SharePoint records, generates the export workbook, and records processing results through FL04.
+10. FL02 updates the document status to `Processed` when processing and logging complete successfully, or to `Error` if processing cannot complete successfully.
+
+
+The Validation Library is restricted to authorized management users. External Staff and Center Groups cannot access its documents.
+
+
+The `Processing` status indicates that the document has entered the protected processing stage. It does not guarantee successful completion of downstream operations.
+
+The `Processed` status indicates successful completion, while `Error` identifies processing or logging failures.
+
+
+## 4. Document Status
+
+The processing workflow uses document metadata to track the lifecycle of each Excel file.
+
+| Status | Purpose |
+|---|---|
+| Pending Validation | Document awaiting review |
+| Validated | Document approved for processing; triggers FL02 |
+| Processing | FL02 is executing and the source document is protected |
+| Processed | Processing completed successfully |
+| Error | Processing failed or could not complete successfully |
+
+The `Validated` status is used by the FL02 trigger condition.
+
+FL02 changes the status to `Processing` during execution.
+
+The final status is `Processed` when processing and logging complete successfully, or `Error` when processing fails, SharePoint record creation errors occur, or required logging fails.
+
+The exact SharePoint choice values and internal column names must match the target implementation.
+
+
+
+## 5. Library Permissions
+
+The Validation Library uses unique permissions rather than inheriting unrestricted access from the Management Subsite.
+
+### Permissions During Validation
+
+| Role | Access |
+|---|---|
+| Site Collection Administrators | Administrative control |
+| Site Owners | Edit |
+| Site Members | Edit |
+| Center Groups | No access |
+| External Staff | No access |
+
+Site Owners and Site Members can review and modify documents during the validation stage.
+
+### Permissions After Processing Starts
+
+When FL02 detects a document with status `Validated`, it applies file-level permission changes.
+
+| Role | Access |
+|---|---|
+| Site Collection Administrators | Administrative control |
+| Site Owners | Read |
+| Site Members | Read |
+| Center Groups | No access |
+| External Staff | No access |
+
+
+FL02 breaks file-level permission inheritance and grants read-only access to Site Owners and Site Members before changing the document status from `Validated` to `Processing`.
+
+
+An appropriately authorized automation connection performs the required operations.
+
+The effective permissions must be tested to ensure that users do not retain editing access through other groups or direct permission assignments.
+
+
+
+## 6. Processed Document Protection
+
+FL02 modifies file-level permissions when a validated document enters the processing stage.
+
+The workflow performs the following operations:
+
+1. Breaks permission inheritance on the file.
+2. Grants Read permission to the Site Owners group.
+3. Grants Read permission to the Site Members group.
+4. Updates the document status from `Validated` to `Processing`.
+5. Continues the main Excel processing operations.
+6. Updates the document status to `Processed` upon successful completion or to `Error` if processing cannot complete successfully.
+
+Under this security model, ordinary Site Owners and Members cannot modify the protected document.
+
+Site Collection Administrators retain administrative privileges.
+
+The effective permissions must be validated to ensure that no additional group memberships or direct grants provide unintended editing access.
+
+
+## 7. Processing Workflow
+
+```mermaid
+flowchart TD
+    A["Excel Document in Validation Library"]
+    B{"Status Validated?"}
+    C["FL02 Starts"]
+    D["Break File Permission Inheritance"]
+    E["Grant Read to Owners and Members"]
+    F["Update Status to Processing"]
+    G["Process Excel Data"]
+    H["Create Records and Export Workbook"]
+    I["Execute FL04 Processing Log"]
+    J{"Processing and Logging Successful?"}
+    K["Update Status to Processed"]
+    L["Update Status to Error"]
+
+    A --> B
+    B -->|Yes| C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
+    I --> J
+    J -->|Yes| K
+    J -->|No| L
+
+```
+
+This diagram summarizes the conceptual processing sequence.
+
+The complete workflow, including error handling and record relationships, is documented separately in FL02.
+
+
+## 8. Important Processing Consideration
+
+The `Processing` status indicates that the document has entered the protected processing stage.
+
+It does not guarantee that all downstream operations have completed successfully.
+
+The document is marked as `Processed` only when the processing workflow and required logging complete successfully.
+
+If processing fails, SharePoint record creation errors occur, or required logging fails, the document is marked as `Error`.
+
+The Processing Logs List provides execution details and diagnostic information through FL04.
+
+
+## 9. Integration with Power Automate
+
+
+### FL01 - Document Intake
+
+FL01 starts when a new request is submitted through the Request Intake List in the Main SharePoint Site.
+
+The workflow retrieves the attached Excel workbook and creates a copy in the Validation Library in the Management Subsite.
+
+This copy is used for internal validation and subsequent processing through FL02.
+
+A separate copy is also created in the Derived Documents Library in the Main SharePoint Site for read-only consultation by authorized users.
+
+
+### FL02 - Excel Processing
+
+Handles:
+
+- Validated document detection.
+- File-level permission changes.
+- Status updates.
+- Excel extraction.
+- Creation of primary and associated records.
+- Export workbook generation.
+- Processing summaries and logging.
+
+### FL04 - Processing Logs
+
+Stores processing results and diagnostic information in the Processing Logs List.
+
+### FL05 - Record Permissions
+
+Applies center-based permissions to processed SharePoint records.
+
+## 10. Security Considerations
+
+- Break inheritance only where required.
+- Exclude unauthorized Center Groups.
+- Restrict modification of processed documents.
+- Preserve administrative access for Site Collection Administrators.
+- Validate effective permissions after permission changes.
+- Use an appropriately authorized Power Automate connection.
+- Do not rely on JSON formatting to enforce security.
+- Avoid exposing production identifiers in public repositories.
+
+## 11. Related Documentation
+
+- [Management Subsite](../sites/management-subsite.md)
+- [SharePoint Sites Architecture](../architecture/sites-architecture.md)
+- [Processed Records List](../lists/processed-records.md)
+- [Processing Logs List](../lists/processing-logs.md)
+- [SharePoint Overview](../README.md)
+
+## 12. Documentation Status
+
+**Status:** Conceptual library documentation complete.
+
+The following implementation details are environment-specific:
+
+- Exact metadata column names.
+- SharePoint permission role definitions.
+- Power Automate connection references.
+- Production library identifiers.
+
+This document is not an automated SharePoint library provisioning template.

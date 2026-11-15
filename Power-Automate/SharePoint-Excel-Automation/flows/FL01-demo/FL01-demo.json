@@ -1,0 +1,202 @@
+
+{
+  "name": "FL01-SharePoint-File-Intake-Demo",
+  "description": "Receive Excel attachments from a SharePoint request list and distribute document copies to the Derived Documents and Validation libraries.",
+  "version": "1.1",
+  "type": "conceptual-demonstration",
+  "importable": false,
+  "architecture": {
+    "mainSite": {
+      "name": "Main Site",
+      "resources": [
+        "Request Intake List",
+        "Derived Documents Library"
+      ]
+    },
+    "managementSubsite": {
+      "name": "Management Subsite",
+      "resources": [
+        "Validation Library"
+      ]
+    }
+  },
+  "trigger": {
+    "type": "SharePoint",
+    "event": "When an item is created",
+    "site": "Main Site",
+    "list": "Request Intake List"
+  },
+  "actions": [
+    {
+      "name": "BreakRequestItemInheritance",
+      "type": "SharePoint",
+      "operation": "Break permission inheritance",
+      "target": "Request Intake List item"
+    },
+    {
+      "name": "AssignRequestItemPermissions",
+      "type": "SharePoint",
+      "operation": "Grant read access",
+      "target": "Request Intake List item",
+      "principals": [
+        "Item Creator",
+        "Site Members",
+        "Site Owners"
+      ]
+    },
+    {
+      "name": "CheckAttachments",
+      "type": "Condition",
+      "expression": "HasAttachments equals true"
+    },
+    {
+      "name": "GetAttachments",
+      "type": "SharePoint",
+      "operation": "Get attachments",
+      "source": "Request Intake List item"
+    },
+    {
+      "name": "FilterExcelAttachments",
+      "type": "Condition",
+      "expression": "File extension equals .xlsx"
+    },
+    {
+      "name": "GetAttachmentContent",
+      "type": "SharePoint",
+      "operation": "Get attachment content"
+    },
+    {
+      "name": "CreateDerivedDocument",
+      "type": "SharePoint",
+      "operation": "Create file",
+      "destination": "Derived Documents Library",
+      "site": "Main Site"
+    },
+    {
+      "name": "EnsureDerivedDocumentReadAccess",
+      "type": "SharePoint",
+      "operation": "Ensure read access",
+      "target": "Derived Documents Library",
+      "principals": [
+        "All Authorized Main Site Users"
+      ]
+    },
+    {
+      "name": "UpdateDerivedDocumentProperties",
+      "type": "SharePoint",
+      "operation": "Update file properties",
+      "target": "Derived Documents Library"
+    },
+    {
+      "name": "CreateValidationDocument",
+      "type": "SharePoint",
+      "operation": "Create file",
+      "destination": "Validation Library",
+      "site": "Management Subsite"
+    },
+    {
+      "name": "ApplyValidationPermissions",
+      "type": "SharePoint",
+      "operation": "Ensure restricted access",
+      "target": "Validation Library",
+      "principals": [
+        "Site Members",
+        "Site Owners"
+      ]
+    },
+    {
+      "name": "UpdateValidationDocumentProperties",
+      "type": "SharePoint",
+      "operation": "Update file properties",
+      "target": "Validation Library"
+    },
+    {
+      "name": "UpdateRequestStatus",
+      "type": "SharePoint",
+      "operation": "Update item",
+      "target": "Request Intake List"
+    }
+  ],
+  "attachmentHandling": {
+    "condition": "HasAttachments equals true",
+    "ifFalse": "Record missing attachment and end processing",
+    "ifTrue": {
+      "loop": "Apply to each attachment",
+      "filter": "Only .xlsx files",
+      "operations": [
+        "Get attachment content",
+        "Create file in Derived Documents Library",
+        "Update derived document metadata",
+        "Create file in Validation Library",
+        "Update validation document metadata"
+      ]
+    }
+  },
+  "permissions": {
+    "requestItem": {
+      "resource": "Request Intake List",
+      "inheritance": "Broken",
+      "groups": [
+        {
+          "name": "Item Creator",
+          "permission": "Read"
+        },
+        {
+          "name": "Site Members",
+          "permission": "Read"
+        },
+        {
+          "name": "Site Owners",
+          "permission": "Read"
+        }
+      ]
+    },
+    "derivedDocuments": {
+      "resource": "Derived Documents Library",
+      "site": "Main Site",
+      "access": "Read",
+      "principals": [
+        "All Authorized Main Site Users"
+      ],
+      "fileCreation": "Authorized automation connection"
+    },
+    "validationDocuments": {
+      "resource": "Validation Library",
+      "site": "Management Subsite",
+      "access": "Restricted",
+      "groups": [
+        {
+          "name": "Site Members",
+          "permission": "Edit during validation"
+        },
+        {
+          "name": "Site Owners",
+          "permission": "Edit during validation"
+        }
+      ],
+      "excludedGroups": [
+        "External Staff",
+        "Center Groups"
+      ],
+      "afterFL02Processing": {
+        "siteMembers": "Read",
+        "siteOwners": "Read",
+        "siteCollectionAdministrators": "Administrative control"
+      }
+    }
+  },
+  "documentMetadata": {
+    "SourceRequestId": "SharePoint Request Intake List item ID",
+    "OriginalFileName": "Original Excel attachment filename",
+    "ValidationStatus": "Pending Validation",
+    "ReceivedDate": "Request creation date",
+    "Source": "Request Intake List"
+  },
+  "implementationStatus": {
+    "status": "Conceptual demonstration",
+    "deployable": false,
+    "notes": "This JSON documents the intended architecture and processing sequence. It is not a Power Automate export and cannot be imported directly. Permissions, conditions, metadata fields and error handling require implementation and testing."
+  }
+}
+
+
