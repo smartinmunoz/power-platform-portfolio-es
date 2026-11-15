@@ -1,153 +1,140 @@
+# FL02 - Procesamiento de Excel y creación de registros
 
-# FL02 - Excel Processing and Record Creation
+## Descripción general
 
-## Overview
+Este flujo procesa archivos Excel validados manualmente, genera los archivos de salida necesarios y crea registros relacionados en SharePoint Online.
 
-This workflow processes manually validated Excel files, generates the required output files and creates related records in SharePoint Online.
+También gestiona los permisos de los documentos para evitar que los validadores modifiquen el archivo Excel durante el procesamiento.
 
-It also manages document permissions to prevent validators from modifying the Excel file during processing.
+## Desencadenador
 
+SharePoint: Cuando se crea o modifica un archivo (solo propiedades).
 
-## Trigger
-
-SharePoint - When a file is created or modified
-(properties only).
-
-The workflow uses the following trigger condition:
+El flujo utiliza la siguiente condición de desencadenamiento:
 
 ```text
 @equals(triggerBody()?['Estat']?['Value'], 'Validat')
 ```
 
-Only events where the file status is "Validated"
-are allowed to start the workflow.
+Solo los eventos en los que el estado del archivo es «Validado» pueden iniciar el flujo.
 
-## Additional Processing Check
+## Comprobación adicional del procesamiento
 
-Before entering the main processing block,
-the workflow checks the validation status again.
+Antes de entrar en el bloque principal de procesamiento, el flujo vuelve a comprobar el estado de validación.
 
-This additional condition was introduced as a
-safeguard during testing to prevent unintended
-processing executions.
+Esta condición adicional se introdujo como medida de protección durante las pruebas para evitar ejecuciones de procesamiento no previstas.
 
-## Main Process
+## Proceso principal
 
-1. Trigger the workflow only when the SharePoint file status is "Validated", using a trigger condition.
-2. Initialize error-tracking variables and the last primary record identifier.
-3. Break permission inheritance and change validators' permissions from Edit/Contribute to Read.
-4. Update the file status to "Processed" before starting the main data processing operations.
-5. Perform an additional validation-status check to prevent unintended processing during testing.
-6. If the condition is met, retrieve the validated Excel file and create a temporary working copy.
-7. Execute Office Scripts to extract the Excel records and check the script result.
-8. Generate the required output Excel files, including the file prepared for import into an external application.
-9. Process the extracted records in Power Automate, distinguishing primary (T) and associated (B) records and managing their relationships.
-10. Create the corresponding records in the target SharePoint list.
+1. Desencadenar el flujo únicamente cuando el estado del archivo de SharePoint sea «Validado», mediante una condición de desencadenamiento.
+2. Inicializar las variables de seguimiento de errores y el identificador del último registro principal.
+3. Romper la herencia de permisos y cambiar los permisos de los validadores de Edición/Colaboración a Lectura.
+4. Actualizar el estado del archivo a «Procesado» antes de iniciar las operaciones principales de tratamiento de datos.
+5. Realizar una comprobación adicional del estado de validación para evitar procesamientos no previstos durante las pruebas.
+6. Si se cumple la condición, recuperar el archivo Excel validado y crear una copia temporal de trabajo.
+7. Ejecutar Office Scripts para extraer los registros de Excel y comprobar el resultado del script.
+8. Generar los archivos Excel de salida necesarios, incluido el archivo preparado para importar datos en una aplicación externa.
+9. Procesar los registros extraídos en Power Automate, distinguiendo entre registros principales (T) y asociados (B), y gestionar sus relaciones.
+10. Crear los registros correspondientes en la lista de SharePoint de destino.
 
-**Note:** In the current implementation, the "Processed" status is assigned before the main processing operations. It does not confirm successful completion.
-  
+**Nota:** En la implementación actual, el estado «Procesado» se asigna antes de las operaciones principales. No confirma que el procesamiento haya finalizado correctamente.
 
-## Record Processing
+## Procesamiento de registros
 
-The source Excel identifies two types of records:
+El archivo Excel de origen distingue dos tipos de registros:
 
-- T: Primary record
-- B: Associated record
+- **T:** Registro principal.
+- **B:** Registro asociado.
 
-Primary records appear before their associated records.
+Los registros principales aparecen antes que sus registros asociados.
 
-Power Automate manages the creation and relationships of these records in SharePoint. This logic is not handled by the initial Excel-reading Office Script.
+Power Automate gestiona la creación y las relaciones de estos registros en SharePoint. Esta lógica no corresponde al Office Script inicial que lee los datos de Excel.
 
-### Sequential Record Processing
+### Procesamiento secuencial de registros
 
-The "Apply to each" loop processes Excel records sequentially, with concurrency limited to one iteration at a time.
+El bucle «Aplicar a cada uno» procesa los registros de Excel secuencialmente, con la concurrencia limitada a una iteración cada vez.
 
-This preserves the original record order and ensures that each primary record (T) is created before its associated records (B).
+Esto mantiene el orden original y garantiza que cada registro principal (T) se cree antes que sus registros asociados (B).
 
-Power Automate stores the SharePoint ID of the most recently created primary record in a variable. Subsequent associated records use this identifier to establish the correct relationship.
+Power Automate almacena en una variable el ID de SharePoint del registro principal creado más recientemente. Los registros asociados posteriores utilizan ese identificador para establecer la relación correcta.
 
-Sequential execution prevents race conditions and incorrect associations caused by parallel processing.
-  
+La ejecución secuencial evita condiciones de carrera y asociaciones incorrectas provocadas por el procesamiento paralelo.
 
-## Permission Management
+## Gestión de permisos
 
-Before accessing and processing the file, FL02 changes the validators' permissions from collaboration to read-only.
+Antes de acceder al archivo y procesarlo, FL02 cambia los permisos de los validadores de colaboración a solo lectura.
 
-This prevents those users from editing the file during processing.
+De este modo, estos usuarios no pueden editar el archivo durante el procesamiento.
 
+## Estado del procesamiento
 
-## Processing Status
+- **Validado (`Validat`):** El archivo se ha revisado y aprobado manualmente para su procesamiento.
+- **Procesado (`Tractat`):** El archivo ha entrado en la fase de procesamiento automatizado.
 
-- **Validated (Validat):** The file has been manually reviewed and approved for processing.
-- **Processed (Tractat):** The file has entered the automated processing stage.
+El flujo cambia el estado del archivo a «Procesado» antes de ejecutar las operaciones principales de tratamiento de datos.
 
-The workflow changes the file status to "Processed" before executing the main data processing operations.
+Este estado no garantiza que el procesamiento haya terminado correctamente.
 
-This status does not guarantee that processing has completed successfully.
+Los errores de procesamiento se registran por separado dentro del flujo.
 
-Processing errors are tracked separately within the workflow.
+## Archivos temporales
 
-## Temporary Files
+Office Scripts puede dejar archivos Excel temporales bloqueados durante un tiempo.
 
-Office Scripts may leave temporary Excel files locked for a period of time.
+Un flujo programado independiente (FL03) se encarga de eliminar los archivos temporales con más de ocho horas de antigüedad.
 
-A separate scheduled workflow (FL03) handles cleanup of temporary files older than 8 hours.
-
-## Technologies
+## Tecnologías
 
 - Power Automate
 - SharePoint Online
 - Excel Online (Business)
 - Office Scripts
 - TypeScript
-- SharePoint permission management
+- Gestión de permisos de SharePoint
 
-## Technical Skills Demonstrated
+## Competencias técnicas demostradas
 
-- Metadata-driven automation
-- Document lifecycle management
-- Permission changes before processing
-- Office Scripts integration
-- Excel data extraction
-- Output file generation
-- SharePoint record creation
-- Related-record processing
-- Workflow orchestration
+- Automatización basada en metadatos
+- Gestión del ciclo de vida documental
+- Modificación de permisos antes del procesamiento
+- Integración de Office Scripts
+- Extracción de datos de Excel
+- Generación de archivos de salida
+- Creación de registros de SharePoint
+- Procesamiento de registros relacionados
+- Orquestación de flujos
 
-## Security
+## Seguridad
 
-This document describes a generic demonstration architecture.
+Este documento describe una arquitectura de demostración genérica.
 
-No corporate URLs, real identifiers, personal data, proprietary scripts or internal configurations are included.
+No incluye URL corporativas, identificadores reales, datos personales, scripts propietarios ni configuraciones internas.
 
-## Excel Export Generation
+## Generación de exportaciones Excel
 
-After the validated source workbook has been processed, the flow generates an Excel file for an external application.
+Después de procesar el libro de Excel de origen validado, el flujo genera un archivo Excel para una aplicación externa.
 
+### Proceso
 
-### Process
+1. Power Automate recupera la plantilla Excel predefinida.
+2. Power Automate crea un libro nuevo copiando la plantilla.
+3. Power Automate envía los registros extraídos por el primer Office Script al segundo Office Script como una cadena JSON.
+4. El Office Script `populate-export-template.ts` se ejecuta sobre el libro recién creado.
+5. El script escribe los campos seleccionados en las celdas de destino predefinidas, a partir de la fila 15, y conserva los encabezados de la plantilla.
+6. El script devuelve a Power Automate el número de registros escritos.
+7. Tras generar los archivos de salida necesarios, Power Automate continúa creando los registros de la lista de SharePoint.
 
-1. Power Automate retrieves the predefined Excel template.
-2. Power Automate creates a new workbook by copying the template.
-3. Power Automate passes the records extracted by the first Office Script to the second Office Script as a JSON string.
-4. The `populate-export-template.ts` Office Script runs against the newly created workbook.
-5. The script writes the selected fields into the predefined destination cells, starting at row 15, while preserving the template headers.
-6. The script returns the number of records written to Power Automate.
-7. After generating the required output files, Power Automate continues with the creation of SharePoint list records.
+### Archivos de demostración
 
-### Demonstration Files
+- `sample-data/sample-records.xlsx`: Datos de origen de ejemplo.
+- `sample-data/export-template.xlsx`: Plantilla Excel con encabezados predefinidos.
+- `office-scripts/process-records.ts`: Extrae los registros de origen.
+- `office-scripts/populate-export-template.ts`: Rellena el libro de exportación.
 
-- `sample-data/sample-records.xlsx`: Sample source data.
-- `sample-data/export-template.xlsx`: Excel template with predefined headers.
-- `office-scripts/process-records.ts`: Extracts source records.
-- `office-scripts/populate-export-template.ts`: Populates the export workbook.
+### Notas de implementación
 
-### Implementation Notes
+La demostración utiliza registros ficticios y una asignación simplificada de cuatro columnas.
 
-The demonstration uses fictional records and a simplified four-column mapping.
+El libro de exportación se genera antes de que el flujo comience a crear registros en la lista de SharePoint de destino.
 
-The export workbook is generated before the flow starts creating records in the SharePoint destination list.
-
-In the production architecture, Power Automate manages file creation and orchestration, while Office Scripts performs the Excel data transformations.
-  
-  
+En la arquitectura de producción descrita, Power Automate gestiona la creación de archivos y la orquestación, mientras que Office Scripts realiza las transformaciones de los datos de Excel.
