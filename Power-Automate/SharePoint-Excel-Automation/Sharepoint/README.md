@@ -1,51 +1,50 @@
+# Arquitectura y personalizaciones de SharePoint Online
 
-# SharePoint Online Architecture & Customizations
+## Descripción general
 
-## Overview
+Esta carpeta documenta la arquitectura de SharePoint Online, la configuración de seguridad, las bibliotecas de documentos, las listas y las personalizaciones JSON utilizadas en el proyecto de automatización de SharePoint y Excel.
 
-This folder documents the SharePoint Online architecture, security configuration, document libraries, lists, and JSON customizations used in the SharePoint & Excel Automation Pipeline project.
+La solución combina SharePoint Online, Microsoft Lists, Power Automate y Office Scripts para gestionar la recepción de solicitudes, la validación documental, el procesamiento de Excel, la creación de registros y el acceso controlado a la información.
 
-The solution combines SharePoint Online, Microsoft Lists, Power Automate, and Office Scripts to manage request intake, document validation, Excel processing, record creation, and controlled access to information.
+La arquitectura se presenta como una demostración reutilizable para un portfolio, basada en escenarios empresariales ficticios.
 
-The architecture is presented as a reusable portfolio demonstration using fictional business scenarios.
+No se incluyen direcciones URL de producción, credenciales, identificadores reales de organizaciones ni información confidencial.
 
-No production URLs, credentials, real organizational identifiers, or confidential information are included.
-
-## Technologies
+## Tecnologías
 
 - SharePoint Online
 - Microsoft Lists
-- SharePoint JSON Formatting
+- Formato JSON de SharePoint
 - Power Automate
 - Office Scripts
 - Microsoft Excel
 
-## Solution Architecture
+## Arquitectura de la solución
 
-The solution uses two SharePoint locations:
+La solución utiliza dos ubicaciones de SharePoint:
 
-1. **Main SharePoint Site:** Provides request submission and access to derived documents.
-2. **Management Subsite:** Contains internal validation, processing, configuration, and logging resources.
+1. **Sitio principal de SharePoint:** permite presentar solicitudes y consultar los documentos derivados.
+2. **Subsitio de gestión:** contiene los recursos internos de validación, procesamiento, configuración y registro de ejecuciones.
 
-The Management Subsite is a subsite of the Main SharePoint Site, not an independent site collection.
+El subsitio de gestión depende del sitio principal de SharePoint; no es una colección de sitios independiente.
 
-The architecture separates external-facing functionality from internal management operations.
+La arquitectura separa las funcionalidades dirigidas a usuarios externos de las operaciones internas de gestión.
 
-### Architecture Diagram
+### Diagrama de arquitectura
 
 ```mermaid
 flowchart TD
-    A[Main SharePoint Site]
-    B[Request Intake List]
-    C[Derived Documents Library]
-    D[Management Subsite]
-    E[Validation Library]
-    F[Export Library]
-    G[Processed Records List]
-    H[Centers Configuration List]
-    I[Processing Logs List]
-    J[Power Automate FL01-FL05]
-    K[Temporary Files Library]
+    A["Sitio principal de SharePoint"]
+    B["Lista de recepción de solicitudes"]
+    C["Biblioteca de documentos derivados"]
+    D["Subsitio de gestión"]
+    E["Biblioteca de validación"]
+    F["Biblioteca de exportaciones"]
+    G["Lista de registros procesados"]
+    H["Lista de configuración de centros"]
+    I["Lista de registros de ejecución"]
+    J["Power Automate FL01-FL05"]
+    K["Biblioteca de archivos temporales"]
     A --> B
     A --> C
     A --> D
@@ -66,9 +65,9 @@ flowchart TD
     K -.-> J
 ```
 
-The dotted connections represent integration with the broader Power Automate solution, not direct relationships between every resource and every workflow.
+Las conexiones discontinuas representan la integración con la solución general de Power Automate, no relaciones directas entre todos los recursos y todos los flujos.
 
-## Repository Structure
+## Estructura del repositorio
 
 ```text
 Sharepoint/
@@ -95,316 +94,310 @@ Sharepoint/
     └── document-library-commandbar.json
 ```
 
-## Architecture Documentation
+## Documentación de arquitectura
 
-| Document | Description |
+| Documento | Descripción |
 |---|---|
-| [Sites Architecture](architecture/sites-architecture.md) | SharePoint site hierarchy, resources, and security model |
-| [Main Site](sites/main-site.md) | External-facing request intake and document consultation |
-| [Management Subsite](sites/management-subsite.md) | Internal processing resources and access controls |
+| [Arquitectura de sitios](architecture/sites-architecture.md) | Jerarquía de sitios de SharePoint, recursos y modelo de seguridad |
+| [Sitio principal](sites/main-site.md) | Recepción de solicitudes de usuarios externos y consulta de documentos |
+| [Subsitio de gestión](sites/management-subsite.md) | Recursos de procesamiento interno y controles de acceso |
 
-## SharePoint Lists
+## Listas de SharePoint
 
-### Request Intake List
+### Lista de recepción de solicitudes
 
-[View documentation](lists/request-intake.md)
+[Ver documentación](lists/request-intake.md)
 
-Located in the Main SharePoint Site.
+Ubicada en el sitio principal de SharePoint.
 
-Allows authorized external staff to submit requests using a customized SharePoint form.
+Permite al personal externo autorizado presentar solicitudes mediante un formulario personalizado de SharePoint.
 
-The user-facing fields include:
+Los campos visibles para el usuario incluyen:
 
-- Observations
-- Excel file attachments
+- Observaciones.
+- Archivos Excel adjuntos.
 
-The list also contains standard SharePoint system fields.
+La lista también contiene los campos estándar del sistema de SharePoint.
 
-### Processed Records List
+### Lista de registros procesados
 
-[View documentation](lists/processed-records.md)
+[Ver documentación](lists/processed-records.md)
 
-Located in the Management Subsite.
+Ubicada en el subsitio de gestión.
 
-Stores primary and associated records generated from Excel processing.
+Almacena los registros principales y asociados generados durante el procesamiento de Excel.
 
-The solution uses:
+La solución utiliza:
 
-- Primary records identified as T.
-- Associated records identified as B.
-- ParentRecordId relationships.
-- Center-based item permissions managed by FL05.
+- Registros principales identificados como `T`.
+- Registros asociados identificados como `B`.
+- Relaciones mediante `ParentRecordId`.
+- Permisos por elemento basados en el centro, gestionados por FL05.
 
-### Centers Configuration List
+### Lista de configuración de centros
 
-[View documentation](lists/centers-configuration.md)
+[Ver documentación](lists/centers-configuration.md)
 
-Stores center configuration and SharePoint group references.
+Almacena la configuración de centros y las referencias a grupos de SharePoint.
 
-The list includes:
+La lista incluye:
 
-- Center
-- SharePoint Group ID
-- Group Management Link
+- Centro (`Center`).
+- ID del grupo de SharePoint.
+- Enlace de administración del grupo.
 
-FL05 uses the configured group identifiers when assigning record-level permissions.
+FL05 utiliza los identificadores de grupo configurados al asignar permisos a los registros.
 
-### Processing Logs List
+### Lista de registros de ejecución
 
-[View documentation](lists/processing-logs.md)
+[Ver documentación](lists/processing-logs.md)
 
-Stores processing execution information generated through FL04.
+Almacena la información de las ejecuciones generada mediante FL04.
 
-The logging architecture supports:
+La arquitectura de registro permite:
 
-- Execution traceability.
-- Processing results.
-- Error tracking.
-- Record creation summaries.
-- Diagnostic information.
+- Trazabilidad de las ejecuciones.
+- Consulta de resultados del procesamiento.
+- Seguimiento de errores.
+- Resúmenes de creación de registros.
+- Información de diagnóstico.
 
-The list is not accessible to external staff or Center Groups.
+El personal externo y los grupos de centros no tienen acceso a esta lista.
 
-## Document Libraries
+## Bibliotecas de documentos
 
-### Derived Documents Library
+### Biblioteca de documentos derivados
 
-[View documentation](libraries/derived-documents.md)
+[Ver documentación](libraries/derived-documents.md)
 
-Located in the Main SharePoint Site.
+Ubicada en el sitio principal de SharePoint.
 
-Provides read-only access to derived documents for authorized users, including external staff where applicable.
+Proporciona acceso de solo lectura a los documentos derivados para los usuarios autorizados, incluido el personal externo cuando corresponda.
 
-### Validation Library
+### Biblioteca de validación
 
-[View documentation](libraries/validation-library.md)
+[Ver documentación](libraries/validation-library.md)
 
-Located in the Management Subsite.
+Ubicada en el subsitio de gestión.
 
-Stores Excel documents awaiting validation and processing.
+Almacena documentos Excel pendientes de validación y procesamiento.
 
+FL02 procesa los documentos con estado `Validated`, los cambia a `Processing` durante la ejecución y los marca como `Processed` al finalizar correctamente o como `Error` si el procesamiento falla.
 
-FL02 processes documents with the `Validated` status, updates them to `Processing` during execution, and marks them as `Processed` upon successful completion or `Error` if processing fails.
+El flujo también protege los documentos de origen interrumpiendo la herencia de permisos a nivel de archivo y asignando permisos de solo lectura a los grupos Owners y Members.
 
-The workflow also protects source documents by breaking file-level permission inheritance and assigning read-only permissions to Owners and Members.
+### Biblioteca de archivos temporales
 
-### Temporary Files Library
+[Ver documentación](libraries/temporary-files-library.md)
 
-[View documentation](libraries/temporary-files-library.md)
+Ubicada en el subsitio de gestión.
 
-Located in the Management Subsite.
+Almacena los libros Excel temporales generados durante el procesamiento de FL02.
 
-Stores temporary Excel workbooks generated during FL02 processing.
+FL03 intenta eliminar periódicamente los archivos temporales con más de ocho horas de antigüedad.
 
+Los errores de eliminación, incluidos los provocados por bloqueos activos de archivos Excel, se tratan mediante mensajes de diagnóstico. El flujo no comprueba explícitamente si un archivo sigue siendo necesario para una operación de procesamiento activa.
 
-FL03 periodically attempts to delete temporary files older than eight hours.
+El acceso está restringido a las cuentas autorizadas de gestión y automatización.
 
-Deletion failures, including those caused by active Excel file locks, are handled diagnostically. The workflow does not explicitly verify whether a file is still required by an active processing operation.
+### Biblioteca de exportaciones
 
+[Ver documentación](libraries/export-library.md)
 
-Access is restricted to authorized management and automation accounts.
+Ubicada en el subsitio de gestión.
 
-### Export Library
+Almacena los libros Excel generados por el flujo de procesamiento.
 
-[View documentation](libraries/export-library.md)
+Los grupos Owners, Members y los grupos de centros tienen acceso de solo lectura.
 
-Located in the Management Subsite.
+Una conexión autorizada de Power Automate realiza las operaciones necesarias de creación y actualización de archivos.
 
-Stores Excel workbooks generated by the processing workflow.
+## Personalizaciones JSON
 
-Owners, Members, and Center Groups have read-only access.
+El formato JSON de SharePoint se utiliza para personalizar elementos compatibles de la interfaz.
 
-An authorized Power Automate connection performs the necessary file creation and update operations.
+Estas personalizaciones mejoran la usabilidad, pero no sustituyen los permisos de SharePoint.
 
-## JSON Customizations
+### Vista de recepción de solicitudes
 
-SharePoint JSON formatting is used to customize supported interface elements.
+[Ver JSON](formatting/request-intake-view.json)
 
-These customizations improve usability but do not replace SharePoint permissions.
+Personaliza la barra de comandos de la lista de recepción de solicitudes.
 
-### Request Intake View
+Entre sus funciones se incluyen:
 
-[View JSON](formatting/request-intake-view.json)
+- Cambiar el nombre del comando New a New Request.
+- Ocultar la edición en cuadrícula.
+- Ocultar los comandos para compartir y copiar enlaces.
+- Ocultar las opciones de exportación.
+- Ocultar comandos de automatización e integración no esenciales.
 
-Customizes the Request Intake List command bar.
+### Barra de comandos de bibliotecas documentales
 
-Features include:
+[Ver JSON](formatting/document-library-commandbar.json)
 
-- Renaming New to New Request.
-- Hiding grid editing.
-- Hiding sharing and copy-link commands.
-- Hiding export options.
-- Hiding non-essential automation and integration commands.
+Proporciona una barra de comandos simplificada para determinadas bibliotecas documentales.
 
-### Document Library Command Bar
+Según la interfaz compatible, puede:
 
-[View JSON](formatting/document-library-commandbar.json)
+- Destacar la edición en cuadrícula.
+- Ocultar los comandos de carga y creación.
+- Ocultar los comandos de eliminación, cambio de nombre, movimiento y copia.
+- Ocultar las opciones de uso compartido y exportación.
+- Reducir las acciones innecesarias de la interfaz.
 
-Provides a simplified command bar for selected document libraries.
+El mismo formato puede adaptarse a bibliotecas con diferentes modelos de permisos.
 
-Depending on the supported interface, it can:
+El JSON debe probarse en la interfaz de SharePoint prevista.
 
-- Highlight grid editing.
-- Hide upload and creation commands.
-- Hide delete, rename, move, and copy commands.
-- Hide sharing and export options.
-- Reduce unnecessary interface actions.
+### Formulario de recepción de solicitudes
 
-The same formatting can be adapted to libraries with different permission models.
+[Ver JSON](forms/request-intake-form.json)
 
-The JSON must be tested against the intended SharePoint interface.
+Contiene una configuración conceptual de diseño para el formulario de la lista de recepción de solicitudes.
 
-### Request Intake Form
+El diseño hace referencia a:
 
-[View JSON](forms/request-intake-form.json)
+- Observaciones.
+- Archivos adjuntos.
 
-Contains a conceptual layout configuration for the Request Intake List form.
+El control estándar de archivos adjuntos de SharePoint debe habilitarse y validarse por separado.
 
-The layout references:
+El JSON no crea columnas, no habilita los adjuntos ni aprovisiona la lista.
 
-- Observations
-- Attachments
+## Modelo de seguridad
 
-The standard SharePoint attachment control must be enabled and validated separately.
+La solución utiliza varias capas de seguridad de SharePoint.
 
-The JSON does not create columns, enable attachments, or provision the list.
+### Seguridad a nivel de sitio
 
-## Security Model
+El sitio principal de SharePoint permite el acceso al personal externo autorizado y a los usuarios de gestión.
 
-The solution uses several layers of SharePoint security.
+El subsitio de gestión restringe el acceso a los recursos internos según los roles de usuario.
 
-### Site-Level Security
+### Seguridad a nivel de biblioteca
 
-The Main SharePoint Site provides access to authorized external staff and management users.
+Cada biblioteca aplica reglas de acceso adecuadas a su finalidad.
 
-The Management Subsite restricts access to internal resources according to user roles.
+Algunos ejemplos son:
 
-### Library-Level Security
+- Acceso de solo lectura a los documentos derivados.
+- Acceso restringido a los documentos de validación.
+- Acceso de solo lectura a los archivos de exportación generados.
 
-Individual libraries use access rules appropriate to their purpose.
+### Seguridad a nivel de elemento
 
-Examples include:
+FL05 asigna permisos a los registros procesados según el centro al que pertenecen.
 
-- Read-only access to derived documents.
-- Restricted access to validation documents.
-- Read-only access to generated export files.
+Cada grupo de centro solo puede acceder a los registros autorizados para ese centro.
 
-### Item-Level Security
+### Protección de documentos procesados
 
-FL05 assigns permissions to processed records according to their associated center.
+FL02 aplica cambios de permisos a nivel de archivo sobre los documentos validados.
 
-Each Center Group can access only the records authorized for that center.
+Los administradores de la colección de sitios conservan el control administrativo.
 
-### Processed Document Protection
+### Principio de seguridad importante
 
-FL02 applies file-level permission changes to validated documents.
+**El formato JSON de SharePoint no constituye una barrera de seguridad.**
 
-Site Collection Administrators retain administrative control.
+Ocultar un botón no impide realizar una operación si el usuario sigue teniendo permiso para ejecutarla desde otra interfaz.
 
-### Important Security Principle
+La seguridad real debe implementarse mediante permisos de SharePoint y una configuración adecuada.
 
-**SharePoint JSON formatting is not a security boundary.**
+## Integración con Power Automate
 
-Hiding a button does not prevent an operation if the user still has permission to perform it through another interface.
+La arquitectura de SharePoint se integra con cinco flujos conceptuales de Power Automate.
 
-Actual security must be implemented through SharePoint permissions and appropriate configuration.
-
-
-## Power Automate Integration
-
-The SharePoint architecture integrates with five conceptual Power Automate workflows.
-
-| Workflow | Responsibility |
+| Flujo | Responsabilidad |
 |---|---|
-| FL01 | Retrieves Excel attachments from the Request Intake List, creates document copies in the Derived Documents Library and Validation Library, and applies request item-level permissions. |
-| FL02 | Processes validated Excel files, protects source documents, creates primary and associated records, and generates export workbooks. |
-| FL03 | Removes temporary processing files older than eight hours. |
-| FL04 | Creates processing log entries and returns the `Id_Log` identifier to FL02. |
-| FL05 | Applies center-based item-level permissions to processed records using the Centers Configuration List. |
+| FL01 | Recupera adjuntos Excel de la lista de recepción de solicitudes, crea copias en las bibliotecas de documentos derivados y de validación, y aplica permisos a los elementos de solicitud. |
+| FL02 | Procesa archivos Excel validados, protege los documentos de origen, crea registros principales y asociados y genera libros de exportación. |
+| FL03 | Elimina archivos temporales de procesamiento con más de ocho horas de antigüedad. |
+| FL04 | Crea registros de ejecución y devuelve el identificador `Id_Log` a FL02. |
+| FL05 | Aplica permisos por elemento basados en el centro a los registros procesados utilizando la lista de configuración de centros. |
 
-### Workflow Coordination
+### Coordinación entre flujos
 
-FL01 handles document intake and distribution between the Main SharePoint Site and the Management Subsite.
+FL01 gestiona la recepción y distribución de documentos entre el sitio principal de SharePoint y el subsitio de gestión.
 
-FL02 handles the validated document processing lifecycle.
+FL02 gestiona el ciclo de procesamiento de los documentos validados.
 
-FL04 provides execution logging, while FL05 manages center-specific record permissions.
+FL04 proporciona el registro de ejecuciones, mientras que FL05 administra los permisos de los registros específicos de cada centro.
 
-FL03 performs temporary file cleanup independently according to its configured schedule.
+FL03 realiza de forma independiente la limpieza de archivos temporales según la programación configurada.
 
-The workflows are documented in the parent project's `flows/` and `docs/` directories.
+Los flujos están documentados en los directorios `flows/` y `docs/` del proyecto principal.
 
+## Consideraciones de implementación
 
-## Implementation Considerations
+La arquitectura está pensada para adaptarse a distintos entornos.
 
-The architecture is intended to be adapted to different environments.
+Las tareas de implementación pueden incluir:
 
-Implementation activities may include:
+1. Crear los sitios y recursos necesarios de SharePoint.
+2. Configurar las columnas de las listas y las bibliotecas documentales.
+3. Asignar permisos a nivel de sitio, biblioteca y elemento.
+4. Habilitar los archivos adjuntos en la lista de recepción de solicitudes.
+5. Aplicar las personalizaciones JSON compatibles.
+6. Configurar las conexiones de Power Automate.
+7. Adaptar las plantillas Excel y los Office Scripts.
+8. Probar los flujos con datos ficticios.
+9. Validar los permisos efectivos de cada rol de usuario.
 
-1. Creating the required SharePoint sites and resources.
-2. Configuring list columns and document libraries.
-3. Assigning site, library, and item permissions.
-4. Enabling attachments on the Request Intake List.
-5. Applying supported JSON customizations.
-6. Configuring Power Automate connections.
-7. Adapting Excel templates and Office Scripts.
-8. Testing the workflows with fictional data.
-9. Validating effective permissions for each user role.
+La documentación no aprovisiona automáticamente el entorno de SharePoint.
 
-The documentation does not automatically provision the SharePoint environment.
+## Reutilización
 
-## Reusability
+La solución muestra patrones reutilizables para:
 
-The solution demonstrates reusable patterns for:
+- Gestión de solicitudes.
+- Validación documental.
+- Automatización de Excel.
+- Relaciones entre registros de SharePoint.
+- Acceso basado en roles y permisos a nivel de elemento.
+- Registro de ejecuciones.
+- Personalización de la interfaz.
+- Separación entre recursos orientados a usuarios externos y recursos internos.
 
-- Request management.
-- Document validation.
-- Excel automation.
-- SharePoint record relationships.
-- Role-based and item-level access.
-- Execution logging.
-- Interface customization.
-- Separation of external-facing and internal resources.
+Los ejemplos están destinados al aprendizaje, la demostración y su presentación en un portfolio profesional.
 
-The examples are intended for learning, demonstration, and portfolio purposes.
+## Estado de la documentación
 
+**Estado: documentación de la arquitectura y los recursos de SharePoint completada.**
 
-## Documentation Status
+Se han documentado los siguientes componentes:
 
-**Status: SharePoint architecture and resource documentation complete.**
+- Sitio principal de SharePoint y subsitio de gestión.
+- Jerarquía de sitios de SharePoint y arquitectura de seguridad.
+- Cuatro listas de SharePoint y sus responsabilidades funcionales.
+- Cuatro bibliotecas documentales y sus modelos de acceso.
+- Ejemplo de diseño del formulario de recepción de solicitudes.
+- Dos ejemplos de personalización JSON de barras de comandos de SharePoint.
+- Ciclo de validación y protección documental.
+- Relaciones entre registros principales y asociados.
+- Gestión de permisos por elemento basados en el centro.
+- Registros de ejecución y trazabilidad.
+- Integración con los flujos FL01 a FL05 de Power Automate.
 
-The following components are documented:
+### Validación de la implementación
 
-- Main SharePoint Site and Management Subsite.
-- SharePoint site hierarchy and security architecture.
-- Four SharePoint lists and their functional responsibilities.
-- Four document libraries and their access models.
-- Request Intake List form layout example.
-- Two SharePoint JSON command bar customization examples.
-- Document validation and protection lifecycle.
-- Primary and associated record relationships.
-- Center-based item-level permission management.
-- Processing logs and execution traceability.
-- Integration with Power Automate workflows FL01 through FL05.
+Las siguientes actividades requieren validación en un entorno de SharePoint de destino:
 
-### Implementation Validation
+- Configuración del sitio y del subsitio.
+- Aprovisionamiento de listas y bibliotecas.
+- Pertenencia a grupos de SharePoint y permisos efectivos.
+- Herencia de permisos a nivel de recurso y elemento.
+- Funcionamiento de los archivos adjuntos del formulario de solicitudes.
+- Compatibilidad del formato JSON.
+- Conexiones y permisos de ejecución de Power Automate.
+- Integración del procesamiento de Excel y Office Scripts.
+- Pruebas integrales de los flujos y de la seguridad.
 
-The following activities require validation in a target SharePoint environment:
+### Alcance del portfolio
 
-- Site and subsite configuration.
-- List and library provisioning.
-- SharePoint group membership and effective permissions.
-- Resource-level and item-level permission inheritance.
-- Request form attachment behavior.
-- JSON formatting compatibility.
-- Power Automate connections and execution permissions.
-- Excel processing and Office Scripts integration.
-- End-to-end workflow and security testing.
+Este repositorio proporciona documentación conceptual de arquitectura y algunos ejemplos reutilizables de configuración.
 
-### Portfolio Scope
+No contiene un paquete de aprovisionamiento de SharePoint completamente desplegable.
 
-This repository provides conceptual architecture documentation and selected reusable configuration examples.
-
-It does not contain a fully deployable SharePoint provisioning package.
-
-All examples use fictionalized scenarios and exclude production credentials, real organizational identifiers, and confidential business information.
+Todos los ejemplos utilizan escenarios ficticios y excluyen credenciales de producción, identificadores reales de organizaciones e información empresarial confidencial.
