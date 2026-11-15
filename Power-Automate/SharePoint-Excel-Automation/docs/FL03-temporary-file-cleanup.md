@@ -1,58 +1,56 @@
+# FL03 - Limpieza programada de archivos temporales
 
-# FL03 - Scheduled Temporary File Cleanup
+## Descripción general
 
-## Overview
+Este flujo muestra el mantenimiento programado de archivos Excel temporales generados durante el procesamiento automatizado de datos.
 
-This workflow demonstrates scheduled maintenance of temporary Excel files generated during automated data processing.
+Aborda los problemas de bloqueo de archivos que pueden producirse después de ejecutar Office Scripts.
 
-It addresses file-locking issues that may occur after executing Office Scripts.
+## Desencadenador
 
-## Trigger
+Power Automate: Recurrencia.
 
-Power Automate - Recurrence
+El flujo se ejecuta automáticamente una vez al día.
 
-The workflow runs automatically once per day.
+## Proceso principal
 
-## Main Process
+1. Iniciar el proceso de limpieza programado.
+2. Recuperar los archivos temporales de la ubicación de almacenamiento designada.
+3. Comprobar la antigüedad de cada archivo.
+4. Identificar los archivos con más de ocho horas de antigüedad.
+5. Eliminar los archivos que cumplan los criterios de limpieza.
 
-1. Start the scheduled cleanup process.
-2. Retrieve temporary files from the designated storage location.
-3. Check the age of each file.
-4. Identify files older than 8 hours.
-5. Delete files that meet the cleanup criteria.
+## Desafío técnico
 
-## Technical Challenge
+Los archivos Excel procesados mediante Office Scripts pueden permanecer bloqueados temporalmente.
 
-Excel files processed using Office Scripts may remain temporarily locked.
+Intentar eliminarlos de inmediato puede generar errores en Power Automate e interferir con otros flujos.
 
-Attempting to delete these files immediately can cause errors in Power Automate and interfere with other workflows.
+## Solución
 
-## Solution
+El proceso de limpieza se separa del flujo principal de procesamiento.
 
-The cleanup process is separated from the main processing workflow.
+Un flujo programado elimina los archivos temporales después de un período de conservación definido, reduciendo los conflictos provocados por los bloqueos temporales.
 
-A scheduled flow removes temporary files after a defined retention period, reducing conflicts caused by temporary file locks.
-
-## Technologies
+## Tecnologías
 
 - Power Automate
-- Scheduled cloud flows
+- Flujos de nube programados
 - SharePoint Online
-- Date and time expressions
-- File management
+- Expresiones de fecha y hora
+- Gestión de archivos
 
-## Technical Skills Demonstrated
+## Competencias técnicas demostradas
 
-- Scheduled automation
-- Temporary file lifecycle management
-- Date-based filtering
-- Workflow separation
-- Operational reliability
-- File-lock handling
+- Automatización programada
+- Gestión del ciclo de vida de archivos temporales
+- Filtrado por fecha
+- Separación de flujos
+- Fiabilidad operativa
+- Gestión de bloqueos de archivos
 
-## Security
+## Seguridad
 
-The public demonstration will use a dedicated test location and fictional files.
+La demostración pública utilizará una ubicación de pruebas específica y archivos ficticios.
 
-No corporate storage paths, credentials or internal configurations will be included.
-  
+No incluirá rutas de almacenamiento corporativas, credenciales ni configuraciones internas.
