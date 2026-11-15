@@ -1,62 +1,60 @@
+# FL05 - Permisos dinámicos de SharePoint
 
-# FL05 - Dynamic SharePoint Permissions
+## Descripción general
 
-## Overview
+Este flujo muestra la gestión dinámica de permisos a nivel de elemento en SharePoint Online.
 
-This workflow demonstrates dynamic item-level permission management in SharePoint Online.
+Los permisos de acceso se determinan mediante una lista de configuración de SharePoint independiente, de modo que los distintos registros pueden asignarse a grupos de seguridad diferentes.
 
-Access permissions are determined by a separate SharePoint configuration list, allowing different records to be assigned to different security groups.
+## Desencadenador
 
-## Trigger
+SharePoint: Cuando se crea un elemento.
 
-SharePoint - When an item is created.
+El flujo se inicia automáticamente cada vez que se crea un registro nuevo en la lista de SharePoint de destino.
 
-The workflow starts automatically whenever a new record is created in the target SharePoint list.
+## Proceso principal
 
-## Main Process
+1. Detectar la creación de un elemento nuevo en una lista de SharePoint.
+2. Recuperar el valor de referencia procedente de la primera columna del archivo Excel de origen.
+3. Buscar ese valor en una lista de configuración de SharePoint independiente.
+4. Identificar los grupos de seguridad asociados a dicha referencia.
+5. Aplicar los permisos configurados al registro recién creado.
 
-1. Detect the creation of a new SharePoint list item.
-2. Retrieve the reference value originating from the first column of the source Excel file.
-3. Search a separate SharePoint configuration list for the corresponding reference value.
-4. Identify the security groups associated with that reference.
-5. Apply the configured permissions to the newly created record.
+## Permisos basados en configuración
 
-## Configuration-Driven Permissions
+En lugar de definir de forma fija las asignaciones de grupos para cada registro, el flujo utiliza una lista de configuración independiente.
 
-Instead of hardcoding group assignments for each record, the workflow uses a separate configuration list.
+Ejemplo con datos ficticios:
 
-Example using fictional data:
-
-| Reference | SharePoint Group |
-|-----------|------------------|
+| Referencia | Grupo de SharePoint |
+|---|---|
 | REGION-A | Group-A |
 | REGION-B | Group-B |
 | REGION-C | Group-C |
 
-The configuration list determines which groups receive access to each record.
+La lista de configuración determina qué grupos reciben acceso a cada registro.
 
-## Technologies
+## Tecnologías
 
 - Power Automate
 - SharePoint Online
-- SharePoint REST API
-- SharePoint security groups
-- Dynamic content
+- API REST de SharePoint
+- Grupos de seguridad de SharePoint
+- Contenido dinámico
 
-## Technical Skills Demonstrated
+## Competencias técnicas demostradas
 
-- Event-driven automation
-- Dynamic permission assignment
-- Configuration-driven workflows
-- SharePoint list lookups
-- Item-level access control
-- Security automation
+- Automatización basada en eventos
+- Asignación dinámica de permisos
+- Flujos basados en configuración
+- Consultas a listas de SharePoint
+- Control de acceso a nivel de elemento
+- Automatización de seguridad
 
-## Security
+## Seguridad
 
-This document describes a generic demonstration architecture.
+Este documento describe una arquitectura de demostración genérica.
 
-All reference values and group names are fictional.
+Todos los valores de referencia y los nombres de grupos son ficticios.
 
-No corporate URLs, security group identifiers, credentials or internal permission configurations are included.
-  
+No incluye URL corporativas, identificadores de grupos de seguridad, credenciales ni configuraciones internas de permisos.
