@@ -1,106 +1,104 @@
+# Lista de registros procesados
 
-# Processed Records List
+## 1. Descripción general
 
-## 1. Overview
+La lista de registros procesados (*Processed Records List*) es una lista de SharePoint Online ubicada en el subsitio de gestión.
 
-The Processed Records List is a SharePoint Online list located in the Management Subsite.
+Almacena información estructurada extraída de libros de Excel validados mediante Power Automate.
 
-It stores structured information extracted from validated Excel workbooks through Power Automate.
+La solución admite registros principales y asociados, relaciones entre registros y control de acceso basado en centros.
 
-The solution supports primary and associated records, relationships between records, and center-based access control.
+La lista está diseñada para adaptarse a diferentes requisitos empresariales y estructuras de datos de Excel.
 
-The list is designed to be adaptable to different business requirements and Excel data structures.
+> **Aviso sobre el portfolio:** Esta documentación describe una demostración conceptual con información ficticia. No contiene datos de producción, identificadores reales de grupos ni información empresarial confidencial.
 
-> **Portfolio disclaimer:** This documentation describes a conceptual demonstration using fictional information. It does not contain production data, real group identifiers, or confidential business information.
+## 2. Configuración de la lista
 
-## 2. List Configuration
-
-| Property | Configuration |
+| Propiedad | Configuración |
 |---|---|
-| List Name | Processed Records |
-| Location | Management Subsite |
-| List Type | SharePoint Online List |
-| Data Source | Validated Excel workbooks |
-| Record Creation | Power Automate FL02 |
-| Permission Management | Power Automate FL05 |
-| Data Structure | Configurable according to business requirements |
+| Nombre de la lista | Processed Records |
+| Ubicación | Subsitio de gestión |
+| Tipo de lista | Lista de SharePoint Online |
+| Origen de datos | Libros de Excel validados |
+| Creación de registros | Power Automate FL02 |
+| Gestión de permisos | Power Automate FL05 |
+| Estructura de datos | Configurable según los requisitos empresariales |
 
-## 3. Flexible Column Structure
+## 3. Estructura flexible de columnas
 
-The SharePoint list is designed to accommodate information extracted from Excel workbooks.
+La lista de SharePoint está diseñada para incorporar la información extraída de los libros de Excel.
 
-Additional columns can be created depending on the data being processed and the needs of each organization.
+Se pueden crear columnas adicionales según los datos procesados y las necesidades de cada organización.
 
-For example, an implementation may include:
+Por ejemplo, una implementación puede incluir:
 
-- Record identifiers.
-- Names or descriptions.
-- Dates.
-- Numeric values.
-- Categories.
-- Status information.
-- Additional business-specific attributes.
+- Identificadores de registros.
+- Nombres o descripciones.
+- Fechas.
+- Valores numéricos.
+- Categorías.
+- Información de estado.
+- Atributos adicionales específicos del negocio.
 
-These are examples rather than mandatory fields.
+Son ejemplos, no campos obligatorios.
 
-When new fields are required, the solution can be extended by:
+Cuando se necesiten campos nuevos, la solución puede ampliarse mediante estos pasos:
 
-1. Adding the corresponding columns to the SharePoint list.
-2. Updating the Excel extraction logic where necessary.
-3. Updating the field mapping in FL02.
-4. Testing the processing workflow with the revised structure.
+1. Añadir las columnas correspondientes a la lista de SharePoint.
+2. Actualizar la lógica de extracción de Excel cuando sea necesario.
+3. Actualizar la asignación de campos en FL02.
+4. Probar el flujo de procesamiento con la estructura modificada.
 
-This approach allows the solution to be reused in different scenarios without requiring a fixed business-specific schema.
+Este enfoque permite reutilizar la solución en diferentes escenarios sin depender de un esquema empresarial fijo.
 
-## 4. Record Types
+## 4. Tipos de registros
 
-The processing workflow supports two record types.
+El flujo de procesamiento admite dos tipos de registros.
 
-### 4.1 Primary Records (T)
+### 4.1 Registros principales (T)
 
-Primary records represent the main entities extracted from the Excel workbook.
+Los registros principales representan las entidades principales extraídas del libro de Excel.
 
-When FL02 creates a primary record, it stores the generated SharePoint item ID.
+Cuando FL02 crea un registro principal, almacena el ID del elemento generado en SharePoint.
 
-This identifier can then be used to establish relationships with associated records.
+Este identificador se utiliza después para establecer relaciones con los registros asociados.
 
-### 4.2 Associated Records (B)
+### 4.2 Registros asociados (B)
 
-Associated records contain information linked to a primary record.
+Los registros asociados contienen información vinculada a un registro principal.
 
-They reference the corresponding primary SharePoint item through the `ParentRecordId` field.
+Hacen referencia al elemento principal correspondiente de SharePoint mediante el campo `ParentRecordId`.
 
-This allows related information to be stored as separate list items while preserving the relationship between records.
+Esto permite almacenar la información relacionada en elementos independientes de la lista, conservando la relación entre los registros.
 
+## 5. Relaciones entre registros
 
-## 5. Record Relationships
+FL02 mantiene las relaciones entre registros principales (`T`) y asociados (`B`) durante el procesamiento secuencial de Excel.
 
-FL02 maintains relationships between primary records (T) and associated records (B) during sequential Excel processing.
+El flujo procesa los registros con la concurrencia establecida en **1** para conservar el orden necesario para las relaciones entre elementos principales y asociados.
 
-The workflow processes records with concurrency set to 1 to preserve the order required for parent-child relationships.
+### Gestión de relaciones
 
-### Relationship Management
+1. FL02 lee los registros estructurados extraídos del libro de Excel validado.
+2. El flujo procesa los registros secuencialmente.
+3. Cuando identifica un registro principal (`T`), FL02 crea un elemento nuevo en la lista de registros procesados.
+4. FL02 almacena el ID del elemento de SharePoint generado en la variable `LastPrimaryRecordId`.
+5. Cuando identifica un registro asociado (`B`), FL02 crea un nuevo elemento en la lista.
+6. El registro asociado recibe el valor de `LastPrimaryRecordId` en su campo `ParentRecordId`.
+7. Así se establece la relación entre el registro asociado y su registro principal correspondiente.
 
-1. FL02 reads the structured records extracted from the validated Excel workbook.
-2. The workflow processes the records sequentially.
-3. When a primary record (T) is identified, FL02 creates a new item in the Processed Records List.
-4. FL02 stores the generated SharePoint item ID in the `LastPrimaryRecordId` variable.
-5. When an associated record (B) is identified, FL02 creates a new list item.
-6. The associated record receives the value of `LastPrimaryRecordId` in its `ParentRecordId` field.
-7. This establishes the relationship between the associated record and its corresponding primary record.
-
-### Relationship Diagram
+### Diagrama de relaciones
 
 ```mermaid
 flowchart TD
-    A[FL02 - Sequential Record Processing]
-    B{Record Type}
-    C[Create Primary Record T]
-    D[Store SharePoint Item ID]
-    E[Update LastPrimaryRecordId]
-    F[Create Associated Record B]
-    G[Set ParentRecordId]
-    H[Processed Records List]
+    A["FL02 - Procesamiento secuencial de registros"]
+    B{"Tipo de registro"}
+    C["Crear registro principal T"]
+    D["Guardar ID del elemento de SharePoint"]
+    E["Actualizar LastPrimaryRecordId"]
+    F["Crear registro asociado B"]
+    G["Establecer ParentRecordId"]
+    H["Lista de registros procesados"]
 
     A --> B
     B -->|T| C
@@ -113,178 +111,173 @@ flowchart TD
     G --> H
 ```
 
-### Processing Considerations
+### Consideraciones de procesamiento
 
-The demonstration assumes that each primary record appears before its associated records in the extracted Excel data.
+La demostración presupone que cada registro principal aparece antes que sus registros asociados en los datos extraídos de Excel.
 
-Sequential processing prevents concurrent iterations from overwriting `LastPrimaryRecordId` while associated records are being created.
+El procesamiento secuencial evita que las iteraciones concurrentes sobrescriban `LastPrimaryRecordId` mientras se crean los registros asociados.
 
-The `ParentRecordId` field stores the SharePoint item ID of the corresponding primary record.
+El campo `ParentRecordId` almacena el ID del elemento de SharePoint correspondiente al registro principal.
 
-The exact relationship strategy can be adapted if the source Excel structure requires a different processing order.
+La estrategia de relaciones puede adaptarse si la estructura del Excel de origen requiere un orden de procesamiento diferente.
 
+## 6. Identificación de familias
 
+La solución utiliza un identificador compuesto de familia para distinguir grupos de registros relacionados procedentes de diferentes archivos Excel.
 
-## 6. Family Identification
-
-The solution uses a composite family identifier to distinguish groups of related records originating from different Excel files.
-
-The identifier is generated using the following expression:
+El identificador se genera mediante esta expresión:
 
 ```text
 concat(SourceFileId, '-', ReferenceCode)
 ```
 
-The `SourceFileId` identifies the source Excel document, while `ReferenceCode` identifies the family or group of related records within that document.
+`SourceFileId` identifica el documento Excel de origen, mientras que `ReferenceCode` identifica la familia o el grupo de registros relacionados dentro de ese documento.
 
-This combination helps prevent identifier collisions between records originating from different source files.
+Esta combinación ayuda a evitar colisiones de identificadores entre registros procedentes de diferentes archivos de origen.
 
-During sequential processing, FL02 stores the `ReferenceCode` of the last successfully created primary record (T) in the `LastPrimaryReferenceCode` variable.
+Durante el procesamiento secuencial, FL02 almacena el `ReferenceCode` del último registro principal (`T`) creado correctamente en la variable `LastPrimaryReferenceCode`.
 
-An associated record (B) can be created only when:
+Un registro asociado (`B`) solo puede crearse cuando se cumplen ambas condiciones:
 
-1. `LastPrimaryRecordId` is greater than zero.
-2. Its `ReferenceCode` matches `LastPrimaryReferenceCode`.
+1. `LastPrimaryRecordId` es mayor que cero.
+2. Su `ReferenceCode` coincide con `LastPrimaryReferenceCode`.
 
-If either condition is not satisfied, FL02 skips the associated record creation and appends a diagnostic entry.
+Si alguna condición no se cumple, FL02 omite la creación del registro asociado y añade una entrada de diagnóstico.
 
-This prevents associated records from being linked to an unrelated or unsuccessfully created primary record.
+Esto evita vincular registros asociados a un registro principal ajeno o cuya creación haya fallado.
 
-## 7. Center-Based Classification
+## 7. Clasificación por centros
 
-Each processed record is associated with an operational center.
+Cada registro procesado está asociado a un centro operativo.
 
-The center information is used to determine which SharePoint group should receive access to the record.
+La información del centro se utiliza para determinar qué grupo de SharePoint debe recibir acceso al registro.
 
-The relationship between centers and SharePoint groups is maintained in the Centers Configuration List.
+La relación entre los centros y los grupos de SharePoint se mantiene en la lista de configuración de centros (*Centers Configuration List*).
 
-This separates business data from access control configuration.
+Esto permite separar los datos empresariales de la configuración del control de acceso.
 
+## 8. Permisos a nivel de elemento
 
-## 8. Item-Level Permissions
+La lista de registros procesados utiliza permisos a nivel de elemento para restringir el acceso según el centro operativo asociado a cada registro.
 
-The Processed Records List uses item-level permissions to restrict access according to the operational center associated with each record.
+FL05 se encarga de aplicar estos permisos dinámicamente.
 
-FL05 is responsible for applying these permissions dynamically.
+### Proceso de asignación de permisos
 
-### Permission Assignment Process
+1. FL02 crea un elemento nuevo en la lista de registros procesados.
+2. FL05 recibe la información necesaria para identificar el registro y su centro asociado.
+3. FL05 busca el centro en la lista de configuración de centros.
+4. La lista de configuración proporciona el ID del grupo de SharePoint asociado a ese centro.
+5. FL05 interrumpe la herencia de permisos del elemento correspondiente.
+6. FL05 asigna los permisos necesarios al grupo del centro autorizado.
+7. Los permisos resultantes restringen el acceso al centro correspondiente.
 
-1. FL02 creates a new item in the Processed Records List.
-2. FL05 receives the information required to identify the record and its associated center.
-3. FL05 looks up the center in the Centers Configuration List.
-4. The configuration list provides the SharePoint Group ID associated with that center.
-5. FL05 breaks permission inheritance for the corresponding list item.
-6. FL05 assigns the required permissions to the authorized center group.
-7. The resulting item permissions restrict access to the corresponding center.
+### Modelo de permisos
 
-### Permission Model
-
-| Role | Access |
+| Rol | Acceso |
 |---|---|
-| Site Collection Administrators | Administrative control |
-| Site Owners | Access according to the configured security model |
-| Site Members | Access according to the configured security model |
-| Assigned Center Group | Read |
-| Other Center Groups | No access |
-| External Staff | No access |
+| Administradores de la colección de sitios | Control administrativo |
+| Site Owners | Acceso según el modelo de seguridad configurado |
+| Site Members | Acceso según el modelo de seguridad configurado |
+| Grupo del centro asignado | Lectura |
+| Otros grupos de centros | Sin acceso |
+| Personal externo | Sin acceso |
 
-### Security Considerations
+### Consideraciones de seguridad
 
-Each center group must only have access to the records assigned to its corresponding center.
+Cada grupo de centro solo debe poder acceder a los registros asignados a su centro correspondiente.
 
-General Read access to the Management Subsite does not automatically grant access to all items in the Processed Records List when item-level inheritance is broken and permissions are configured correctly.
+El acceso general de lectura al subsitio de gestión no concede automáticamente acceso a todos los elementos de la lista de registros procesados cuando se ha interrumpido correctamente la herencia de permisos y estos se han configurado de forma adecuada.
 
-The Centers Configuration List provides the relationship between operational centers and SharePoint group identifiers.
+La lista de configuración de centros proporciona la relación entre los centros operativos y los identificadores de los grupos de SharePoint.
 
-FL05 must use an appropriately authorized connection to manage SharePoint item permissions.
+FL05 debe utilizar una conexión con autorización suficiente para gestionar los permisos de los elementos de SharePoint.
 
-Effective permissions must be tested to ensure that users cannot access records from other centers through inherited permissions, additional group memberships, or direct assignments.
+Deben comprobarse los permisos efectivos para garantizar que los usuarios no puedan acceder a registros de otros centros mediante permisos heredados, pertenencia a otros grupos o asignaciones directas.
 
+## 9. Integración con Power Automate
 
+La lista de registros procesados se integra con tres flujos de Power Automate: FL02, FL05 y FL04.
 
-## 9. Integration with Power Automate
+### FL02: procesamiento de Excel
 
-The Processed Records List is integrated with three Power Automate workflows: FL02, FL05, and FL04.
+FL02 se encarga de:
 
-### FL02 - Excel Processing
+- Leer y procesar datos de Excel validados.
+- Identificar registros principales (`T`) y asociados (`B`).
+- Crear elementos en la lista de SharePoint.
+- Mantener las relaciones entre registros mediante `LastPrimaryRecordId` y `ParentRecordId`.
+- Asociar cada registro con su centro operativo correspondiente.
+- Registrar los resultados del procesamiento y los errores.
 
-FL02 is responsible for:
+FL02 procesa los registros secuencialmente para conservar la relación entre registros principales y asociados.
 
-- Reading and processing validated Excel data.
-- Identifying primary (T) and associated (B) records.
-- Creating SharePoint list items.
-- Maintaining parent-child relationships through `LastPrimaryRecordId` and `ParentRecordId`.
-- Associating each record with its corresponding operational center.
-- Recording processing results and errors.
+### FL05: permisos dinámicos por elemento
 
-FL02 processes records sequentially to preserve the relationship between primary and associated records.
+FL05 se encarga de:
 
-### FL05 - Dynamic Item Permissions
+- Recibir la información necesaria para identificar el registro de SharePoint y su centro operativo.
+- Buscar el ID del grupo de SharePoint del centro en la lista de configuración de centros.
+- Interrumpir la herencia de permisos del elemento.
+- Asignar permisos de lectura al grupo del centro correspondiente.
+- Restringir el acceso de los demás grupos de centros.
 
-FL05 is responsible for:
+FL05 aplica las reglas de control de acceso de manera independiente de la lógica de creación de registros.
 
-- Receiving the information required to identify the SharePoint record and its operational center.
-- Looking up the center's SharePoint Group ID in the Centers Configuration List.
-- Breaking item-level permission inheritance.
-- Assigning Read permissions to the corresponding center group.
-- Restricting access by other center groups.
+### FL04: registros de ejecución
 
-FL05 applies the access control rules independently of the record creation logic.
+FL04 registra los resultados del procesamiento y la información de diagnóstico en la lista de registros de ejecución (*Processing Logs List*).
 
-### FL04 - Processing Logs
+Esto proporciona trazabilidad de la ejecución de FL02, incluidos los registros creados y los errores de procesamiento.
 
-FL04 records processing results and diagnostic information in the Processing Logs List.
+### Responsabilidades de los flujos
 
-This provides traceability for the execution of FL02, including records created and processing errors.
-
-### Workflow Responsibilities
-
-| Workflow | Responsibility |
+| Flujo | Responsabilidad |
 |---|---|
-| FL02 | Excel processing and SharePoint record creation |
-| FL05 | Dynamic item-level permission assignment |
-| FL04 | Processing logs and execution traceability |
+| FL02 | Procesamiento de Excel y creación de registros en SharePoint |
+| FL05 | Asignación dinámica de permisos a nivel de elemento |
+| FL04 | Registro de resultados y trazabilidad de las ejecuciones |
 
-Separating these responsibilities improves maintainability and allows the processing and permission logic to evolve independently.
+Separar estas responsabilidades facilita el mantenimiento y permite evolucionar de forma independiente la lógica de procesamiento y la de permisos.
 
-## 10. Example Data
+## 10. Datos de ejemplo
 
-The following example is fictional and illustrates the relationship between records.
+El siguiente ejemplo es ficticio e ilustra la relación entre los registros.
 
-| Item ID | Record Type | Description | ParentRecordId | Center |
+| ID del elemento | Tipo de registro | Descripción | ParentRecordId | Centro |
 |---|---|---|---|---|
-| 101 | T | Primary Record A | | Center North |
-| 102 | B | Associated Record A1 | 101 | Center North |
-| 103 | B | Associated Record A2 | 101 | Center North |
-| 104 | T | Primary Record B | | Center South |
-| 105 | B | Associated Record B1 | 104 | Center South |
+| 101 | T | Registro principal A | | Centro Norte |
+| 102 | B | Registro asociado A1 | 101 | Centro Norte |
+| 103 | B | Registro asociado A2 | 101 | Centro Norte |
+| 104 | T | Registro principal B | | Centro Sur |
+| 105 | B | Registro asociado B1 | 104 | Centro Sur |
 
-The example does not define a mandatory SharePoint schema.
+El ejemplo no define un esquema obligatorio de SharePoint.
 
-Additional fields can be added to support different Excel templates and processing requirements.
+Se pueden añadir campos adicionales para admitir diferentes plantillas de Excel y requisitos de procesamiento.
 
-## 11. Security Considerations
+## 11. Consideraciones de seguridad
 
-- Apply least-privilege permissions.
-- Restrict access through SharePoint item-level permissions.
-- Use the Centers Configuration List to resolve group assignments.
-- Avoid exposing records from unrelated centers.
-- Review effective permissions for users belonging to multiple groups.
-- Validate permission inheritance and access assignments.
-- Do not store real group IDs or confidential information in public examples.
+- Aplicar permisos basados en el principio de mínimo privilegio.
+- Restringir el acceso mediante permisos de SharePoint a nivel de elemento.
+- Utilizar la lista de configuración de centros para determinar las asignaciones de grupos.
+- Evitar que se expongan registros de centros no relacionados.
+- Revisar los permisos efectivos de los usuarios que pertenecen a varios grupos.
+- Validar la herencia de permisos y las asignaciones de acceso.
+- No almacenar identificadores reales de grupos ni información confidencial en los ejemplos públicos.
 
-## 12. Related Documentation
+## 12. Documentación relacionada
 
-- [Management Subsite](../sites/management-subsite.md)
-- [SharePoint Sites Architecture](../architecture/sites-architecture.md)
-- [SharePoint Overview](../README.md)
+- [Subsitio de gestión](../sites/management-subsite.md)
+- [Arquitectura de sitios de SharePoint](../architecture/sites-architecture.md)
+- [Descripción general de SharePoint](../README.md)
 
-## 13. Documentation Status
+## 13. Estado de la documentación
 
-**Status:** Conceptual list documentation complete.
+**Estado:** Documentación conceptual de la lista completada.
 
-The SharePoint column schema can be extended according to the Excel source structure and business requirements.
+El esquema de columnas de SharePoint puede ampliarse según la estructura de los datos Excel de origen y los requisitos empresariales.
 
-Detailed provisioning scripts and production-specific field mappings are intentionally excluded from this portfolio example.
+Los scripts detallados de aprovisionamiento y las asignaciones de campos específicas de producción se excluyen deliberadamente de este ejemplo de portfolio.
 
-This document is not an automated SharePoint list provisioning template.
+Este documento no es una plantilla de aprovisionamiento automatizado de listas de SharePoint.
