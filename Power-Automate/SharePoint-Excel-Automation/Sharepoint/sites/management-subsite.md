@@ -1,464 +1,452 @@
+# Subsitio de gestión de SharePoint
 
-# Management Subsite
+## 1. Descripción general
 
-## 1. Overview
+El subsitio de gestión es un subsitio de SharePoint Online integrado en el sitio principal de SharePoint.
 
-The Management Subsite is a SharePoint Online subsite within the Main SharePoint Site.
+Proporciona un entorno centralizado para la validación documental, el procesamiento de Excel, la gestión de registros, la configuración de centros y la supervisión de ejecuciones.
 
-It provides a centralized environment for document validation, Excel processing, record management, center configuration, and execution monitoring.
+La solución integra SharePoint Online con los flujos de Power Automate FL01–FL05.
 
-The solution integrates SharePoint Online with Power Automate workflows FL01-FL05.
+> **Aviso sobre el portfolio:** Esta documentación describe una arquitectura de demostración ficticia. No incluye direcciones URL de producción, identificadores reales de grupos, credenciales ni información empresarial confidencial.
 
-> **Portfolio disclaimer:** This documentation describes a fictionalized demonstration architecture. No production URLs, real group IDs, credentials, or confidential business information are included.
-
-## 2. Subsite Structure
+## 2. Estructura del subsitio
 
 ```text
-Management Subsite
+Subsitio de gestión
 |
-|-- Validation Library
-|-- Temporary Files Library
-|-- Export Library
+|-- Biblioteca de validación
+|-- Biblioteca de archivos temporales
+|-- Biblioteca de exportaciones
 |
-|-- Processed Records List
-|-- Centers Configuration List
-`-- Processing Logs List
-
+|-- Lista de registros procesados
+|-- Lista de configuración de centros
+`-- Lista de registros de ejecución
 ```
 
-## 3. User Roles
+## 3. Roles de usuario
 
-The subsite uses SharePoint groups and resource-specific permissions.
+El subsitio utiliza grupos de SharePoint y permisos específicos para cada recurso.
 
-| Role | Description |
+| Rol | Descripción |
 |---|---|
-| Site Collection Administrators | Retain administrative control over the site collection |
-| Site Owners | Management users with resource-specific permissions |
-| Site Members | Internal operational users |
-| Center Groups | Users associated with individual operational centers |
-| External Staff | No general access to the management subsite |
+| Site Collection Administrators | Conservan el control administrativo sobre la colección de sitios |
+| Site Owners | Usuarios de gestión con permisos específicos según el recurso |
+| Site Members | Usuarios operativos internos |
+| Center Groups | Usuarios asociados a cada centro operativo |
+| External Staff | No tienen acceso general al subsitio de gestión |
 
-Center groups have read access to the subsite, except where inheritance is interrupted or item-level permissions restrict access.
+Los grupos de centros tienen acceso de lectura al subsitio, excepto cuando se interrumpe la herencia o se restringe el acceso mediante permisos a nivel de elemento.
 
-Site Owners and Members may also have different effective permissions depending on the resource.
+Los permisos efectivos de Site Owners y Site Members también pueden variar según el recurso.
 
-## 4. Validation Library
+## 4. Biblioteca de validación
 
-### 4.1 Purpose
+### 4.1 Finalidad
 
-The Validation Library stores Excel documents awaiting validation and processing.
+La biblioteca de validación almacena los documentos Excel pendientes de validación y procesamiento.
 
-Documents are reviewed and validated before the automated processing workflow continues.
+Los documentos se revisan y validan antes de continuar con el procesamiento automatizado.
 
-### 4.2 Permission Configuration
+### 4.2 Configuración de permisos
 
-The library uses unique permissions rather than unrestricted inheritance from the subsite.
+La biblioteca utiliza permisos únicos en lugar de heredar sin restricciones los del subsitio.
 
-- Site Owners: authorized management access.
-- Site Members: authorized management access.
-- Center Groups: no access.
-- External Staff: no access.
-- Site Collection Administrators: administrative control.
+- **Site Owners:** acceso de gestión autorizado.
+- **Site Members:** acceso de gestión autorizado.
+- **Center Groups:** sin acceso.
+- **External Staff:** sin acceso.
+- **Site Collection Administrators:** control administrativo.
 
-### 4.3 Processed Document Protection
+### 4.3 Protección de documentos procesados
 
-When a document is validated, FL02 starts processing and applies file-level permission changes to protect the source workbook.
+Cuando se valida un documento, FL02 inicia su procesamiento y modifica los permisos a nivel de archivo para proteger el libro de origen.
 
-The workflow:
+El flujo:
 
-1. Breaks permission inheritance on the document.
-2. Assigns Read permissions to the Site Owners group.
-3. Assigns Read permissions to the Site Members group.
-4. Updates the document status from `Validated` to `Processing`.
-5. Continues the Excel processing workflow.
-6. Updates the document status to `Processed` when processing and required logging complete successfully, or to `Error` if processing cannot complete successfully.
+1. Interrumpe la herencia de permisos del documento.
+2. Asigna permisos de lectura al grupo Site Owners.
+3. Asigna permisos de lectura al grupo Site Members.
+4. Cambia el estado del documento de `Validated` a `Processing`.
+5. Continúa con el procesamiento de Excel.
+6. Actualiza el estado a `Processed` cuando el procesamiento y el registro de ejecución requerido finalizan correctamente, o a `Error` si no pueden completarse satisfactoriamente.
 
-After the permission changes, ordinary Site Owners and Members have read-only access to the protected document.
+Tras modificar los permisos, los usuarios ordinarios de Site Owners y Site Members solo tienen acceso de lectura al documento protegido.
 
-Site Collection Administrators retain administrative control under the documented permission model.
+Los administradores de la colección de sitios conservan el control administrativo conforme al modelo de permisos documentado.
 
-**Important:** The `Processing` status indicates that the document is being processed. It does not guarantee successful completion. The final status distinguishes successful processing (`Processed`) from processing or logging failures (`Error`).
+**Importante:** El estado `Processing` indica que el documento está siendo procesado, pero no garantiza que el proceso termine correctamente. El estado final distingue entre el procesamiento satisfactorio (`Processed`) y los errores de procesamiento o registro (`Error`).
 
-## 5. Temporary Files Library
+## 5. Biblioteca de archivos temporales
 
-### 5.1 Purpose
+### 5.1 Finalidad
 
-The Temporary Files Library provides a dedicated workspace for Excel files generated during automated processing.
+La biblioteca de archivos temporales proporciona un espacio de trabajo específico para los archivos Excel generados durante el procesamiento automatizado.
 
-FL02 creates temporary working copies of validated documents, keeping original files separate from intermediate processing operations.
+FL02 crea copias temporales de trabajo de los documentos validados, manteniendo separados los archivos originales y las operaciones intermedias.
 
-FL03 periodically removes temporary files older than eight hours.
+FL03 elimina periódicamente los archivos temporales con más de ocho horas de antigüedad.
 
-### 5.2 Permissions
+### 5.2 Permisos
 
-| Role | Access |
+| Rol | Acceso |
 |---|---|
-| Site Owners | Full Control |
-| Authorized Management Members | As required for administration |
-| Power Automate Processing Connection | Read / Write / Delete |
-| Center Groups | No access |
-| External Staff | No access |
+| Site Owners | Control total |
+| Miembros de gestión autorizados | El necesario para la administración |
+| Conexión de procesamiento de Power Automate | Lectura / escritura / eliminación |
+| Center Groups | Sin acceso |
+| External Staff | Sin acceso |
 
-The library uses restricted permissions to prevent unauthorized access to temporary processing files.
+La biblioteca utiliza permisos restringidos para impedir el acceso no autorizado a los archivos temporales de procesamiento.
 
-The eight-hour threshold determines cleanup eligibility, not an exact deletion time.
+El umbral de ocho horas determina qué archivos pueden eliminarse, pero no establece una hora exacta de eliminación.
 
-For implementation details, see [Temporary Files Library](../libraries/temporary-files-library.md).
+Para más detalles de implementación, consulta [Biblioteca de archivos temporales](../libraries/temporary-files-library.md).
 
+## 6. Biblioteca de exportaciones
 
-## 6. Export Library
+### 6.1 Finalidad
 
-### 6.1 Purpose
+La biblioteca de exportaciones almacena los libros Excel generados durante el procesamiento.
 
-The Export Library stores Excel workbooks generated during the processing workflow.
+Estos archivos proporcionan resultados estructurados para los usuarios autorizados.
 
-These files provide structured outputs for authorized users.
+### 6.2 Permisos
 
-### 6.2 Permissions
-
-| Role | Permission |
+| Rol | Permiso |
 |---|---|
-| Site Collection Administrators | Administrative control |
-| Site Owners | Read |
-| Site Members | Read |
-| Center Groups | Read |
-| External Staff | No access |
+| Site Collection Administrators | Control administrativo |
+| Site Owners | Lectura |
+| Site Members | Lectura |
+| Center Groups | Lectura |
+| External Staff | Sin acceso |
 
-The library may use customized SharePoint command bar formatting.
+La biblioteca puede utilizar personalizaciones JSON de la barra de comandos de SharePoint.
 
-JSON formatting is used for presentation and usability, not as a replacement for access control.
+El formato JSON se emplea para mejorar la presentación y la usabilidad, no para sustituir el control de acceso.
 
-## 7. Processed Records List
+## 7. Lista de registros procesados
 
-### 7.1 Purpose
+### 7.1 Finalidad
 
-The Processed Records List stores information extracted from validated Excel workbooks.
+La lista de registros procesados almacena la información extraída de los libros Excel validados.
 
-The processing workflow creates primary records and associated records.
+El flujo de procesamiento crea registros principales y registros asociados.
 
-Associated records reference their corresponding primary record.
+Los registros asociados hacen referencia a su correspondiente registro principal.
 
-### 7.2 Center-Based Access
+### 7.2 Acceso basado en centros
 
-Access is controlled through item-level permissions.
+El acceso se controla mediante permisos a nivel de elemento.
 
-FL05 assigns permissions based on the center associated with each record.
+FL05 asigna permisos según el centro asociado a cada registro.
 
-This allows center groups to access only the records assigned to them.
+Esto permite que los grupos de centros accedan únicamente a los registros que tienen asignados.
 
-General read access to the subsite does not automatically grant access to every record in this list.
+El acceso general de lectura al subsitio no concede automáticamente acceso a todos los registros de esta lista.
 
-### 7.3 Relationship with FL02 and FL05
+### 7.3 Relación con FL02 y FL05
 
-FL02 creates the processed records.
+FL02 crea los registros procesados.
 
-FL05 applies the required SharePoint permissions to individual list items.
+FL05 aplica los permisos necesarios de SharePoint a cada elemento de la lista.
 
-The center-to-group mapping is retrieved from the Centers Configuration List.
+La correspondencia entre centros y grupos se obtiene de la lista de configuración de centros.
 
-## 8. Centers Configuration List
+## 8. Lista de configuración de centros
 
-### 8.1 Purpose
+### 8.1 Finalidad
 
-A single SharePoint list maintains the relationship between operational centers and their corresponding SharePoint groups.
+Una única lista de SharePoint mantiene la relación entre los centros operativos y sus correspondientes grupos de SharePoint.
 
-### 8.2 Configuration Fields
+### 8.2 Campos de configuración
 
-| Field | Description |
+| Campo | Descripción |
 |---|---|
-| Center | Center name or identifier |
-| SharePoint Group ID | Identifier of the group associated with the center |
-| Group Management Link | Link used by authorized administrators to manage group membership |
+| Center | Nombre o identificador del centro |
+| SharePoint Group ID | Identificador del grupo asociado al centro |
+| Group Management Link | Enlace que utilizan los administradores autorizados para gestionar la pertenencia al grupo |
 
-The list is readable by all users who have access to the management subsite.
+Todos los usuarios que tienen acceso al subsitio de gestión pueden leer la lista.
 
-### 8.3 Group Management
+### 8.3 Administración de grupos
 
-Group management links are available for reference.
+Los enlaces de administración de grupos están disponibles como referencia.
 
-However, access to a link does not grant permission to modify group membership.
+Sin embargo, disponer de un enlace no concede permisos para modificar la pertenencia al grupo.
 
-Only users with the appropriate SharePoint group management privileges can administer those groups.
+Solo los usuarios con los privilegios adecuados de administración de grupos de SharePoint pueden gestionar dichos grupos.
 
-### 8.4 Integration with FL05
+### 8.4 Integración con FL05
 
-FL05 uses the center configuration to identify the relevant SharePoint group and assign item-level permissions to processed records.
+FL05 utiliza la configuración de centros para identificar el grupo de SharePoint correspondiente y asignar permisos a nivel de elemento a los registros procesados.
 
-The public portfolio does not include real SharePoint group identifiers or administrative URLs.
+El portfolio público no incluye identificadores reales de grupos de SharePoint ni direcciones URL administrativas.
 
-## 9. Processing Logs List
+## 9. Lista de registros de ejecución
 
-### 9.1 Purpose
+### 9.1 Finalidad
 
-The Processing Logs List provides traceability for automated document processing.
+La lista de registros de ejecución permite mantener la trazabilidad del procesamiento automatizado de documentos.
 
-FL04 creates log entries containing execution and processing information.
+FL04 crea entradas con información sobre las ejecuciones y sus resultados.
 
-### 9.2 Example Information
+### 9.2 Información de ejemplo
 
-Depending on the workflow configuration, a log entry may contain:
+Según la configuración del flujo, una entrada puede contener:
 
-- Processing execution identifier.
-- Source document reference.
-- Processing status.
-- Number of successfully created records.
-- Error information.
-- Processing summary.
+- Identificador de ejecución del procesamiento.
+- Referencia al documento de origen.
+- Estado del procesamiento.
+- Número de registros creados correctamente.
+- Información sobre errores.
+- Resumen del procesamiento.
 
-The exact column schema will be documented separately.
+El esquema exacto de columnas se documenta por separado.
 
-### 9.3 Permissions
+### 9.3 Permisos
 
-| Role | Permission |
+| Rol | Permiso |
 |---|---|
-| Site Collection Administrators | Administrative control |
-| Site Owners | Read |
-| Site Members | Read |
-| Center Groups | No access |
-| External Staff | No access |
+| Site Collection Administrators | Control administrativo |
+| Site Owners | Lectura |
+| Site Members | Lectura |
+| Center Groups | Sin acceso |
+| External Staff | Sin acceso |
 
-The list must use restricted permissions to prevent center groups from inheriting general read access from the subsite.
+La lista debe utilizar permisos restringidos para impedir que los grupos de centros hereden el acceso general de lectura del subsitio.
 
-FL04 writes log entries through an appropriately authorized Power Automate connection.
+FL04 escribe los registros mediante una conexión de Power Automate debidamente autorizada.
 
-Read-only access for ordinary users does not prevent an authorized automation connection from creating records.
+El acceso de solo lectura de los usuarios ordinarios no impide que una conexión de automatización autorizada cree registros.
 
+## 10. Matriz de permisos
 
-## 10. Permissions Matrix
+La siguiente matriz resume el modelo conceptual de permisos del subsitio de gestión.
 
-The following matrix summarizes the conceptual permission model for the Management Subsite.
-
-| Resource | Site Owners | Site Members | Center Groups | External Staff |
+| Recurso | Site Owners | Site Members | Center Groups | External Staff |
 |---|---|---|---|---|
-| Management Subsite | According to role | According to role | Read | No access |
-| Validation Library - During Validation | Edit | Edit | No access | No access |
-| Validation Library - After FL02 Protection | Read | Read | No access | No access |
-| Export Library | Read | Read | Read | No access |
-| Temporary Files Library | Full Control | Restricted to authorized management members | No access | No access |
-| Processed Records List | Edit | Edit | Assigned records only | No access |
-| Centers Configuration List | Read | Read | Read | No access |
-| Processing Logs List | Read | Read | No access | No access |
+| Subsitio de gestión | Según el rol | Según el rol | Lectura | Sin acceso |
+| Biblioteca de validación: durante la validación | Edición | Edición | Sin acceso | Sin acceso |
+| Biblioteca de validación: después de la protección de FL02 | Lectura | Lectura | Sin acceso | Sin acceso |
+| Biblioteca de exportaciones | Lectura | Lectura | Lectura | Sin acceso |
+| Biblioteca de archivos temporales | Control total | Restringido a miembros de gestión autorizados | Sin acceso | Sin acceso |
+| Lista de registros procesados | Edición | Edición | Solo registros asignados | Sin acceso |
+| Lista de configuración de centros | Lectura | Lectura | Lectura | Sin acceso |
+| Lista de registros de ejecución | Lectura | Lectura | Sin acceso | Sin acceso |
 
-### Validation Library Access
+### Acceso a la biblioteca de validación
 
-During validation, Site Owners and Site Members can edit documents.
+Durante la validación, Site Owners y Site Members pueden editar documentos.
 
-When FL02 processes a validated document, it breaks file-level permission inheritance and assigns Read access to Site Owners and Site Members.
+Cuando FL02 procesa un documento validado, interrumpe la herencia de permisos a nivel de archivo y asigna acceso de lectura a Site Owners y Site Members.
 
-Site Collection Administrators retain administrative control.
+Los administradores de la colección de sitios conservan el control administrativo.
 
-### Center-Based Access
+### Acceso basado en centros
 
-Center Groups have general Read access to the Management Subsite.
+Los grupos de centros tienen acceso general de lectura al subsitio de gestión.
 
-However, access to individual resources depends on their specific permissions.
+Sin embargo, el acceso a cada recurso depende de sus permisos específicos.
 
-FL05 assigns item-level permissions to Processed Records List items based on the center-to-group mapping stored in the Centers Configuration List.
+FL05 asigna permisos a los elementos de la lista de registros procesados según la correspondencia entre centros y grupos almacenada en la lista de configuración de centros.
 
-Center Groups do not automatically receive access to every processed record.
+Los grupos de centros no reciben automáticamente acceso a todos los registros procesados.
 
-### Restricted Resources
+### Recursos restringidos
 
-The Validation Library and Processing Logs List exclude Center Groups and External Staff.
+La biblioteca de validación y la lista de registros de ejecución excluyen a los grupos de centros y al personal externo.
 
-External Staff do not have access to the Management Subsite.
+El personal externo no tiene acceso al subsitio de gestión.
 
+### Acceso a la biblioteca de archivos temporales
 
-### Temporary Files Library Access
+La biblioteca de archivos temporales utiliza acceso restringido para proteger los libros Excel intermedios generados por FL02.
 
-The Temporary Files Library uses restricted access to protect intermediate Excel workbooks generated by FL02.
-
-| Role | Access |
+| Rol | Acceso |
 |---|---|
-| Site Owners | Full Control |
-| Authorized Management Members | As required for administration |
-| Power Automate Processing Connection | Read / Write / Delete |
-| Center Groups | No access |
-| External Staff | No access |
+| Site Owners | Control total |
+| Miembros de gestión autorizados | El necesario para la administración |
+| Conexión de procesamiento de Power Automate | Lectura / escritura / eliminación |
+| Center Groups | Sin acceso |
+| External Staff | Sin acceso |
 
-FL03 uses an authorized automation connection to delete temporary files older than eight hours.
+FL03 utiliza una conexión de automatización autorizada para eliminar archivos temporales con más de ocho horas de antigüedad.
 
-Deletion failures, including files locked by active Excel operations, must be handled without interrupting the remaining cleanup operations.
+Los errores de eliminación, incluidos los archivos bloqueados por operaciones activas de Excel, deben tratarse sin interrumpir el resto de las operaciones de limpieza.
 
+## 11. Herencia de permisos
 
-## 11. Permission Inheritance
+El subsitio de gestión combina el acceso general a nivel de subsitio con restricciones específicas de cada recurso y elemento.
 
-The Management Subsite combines general subsite-level access with resource-specific and item-level permission restrictions.
+Los grupos de centros tienen acceso general de lectura al subsitio, pero esto no concede automáticamente acceso a todas las listas, bibliotecas o documentos.
 
-Center Groups have general Read access to the subsite, but this does not automatically grant access to every list, library, or document.
+### Biblioteca de validación
 
-### Validation Library
+- Se interrumpe la herencia de permisos a nivel de biblioteca.
+- Se excluye a Center Groups y External Staff.
+- Site Owners y Site Members tienen acceso de edición durante la validación.
+- FL02 interrumpe la herencia de permisos a nivel de archivo cuando procesa un documento validado.
+- FL02 asigna acceso de lectura a Site Owners y Site Members.
+- Los administradores de la colección de sitios conservan el control administrativo.
 
-- Library-level permission inheritance is interrupted.
-- Center Groups and External Staff are excluded.
-- Site Owners and Site Members have Edit access during validation.
-- FL02 breaks file-level permission inheritance when processing a validated document.
-- FL02 assigns Read access to Site Owners and Site Members.
-- Site Collection Administrators retain administrative control.
+### Biblioteca de archivos temporales
 
-### Temporary Files Library
+- Se interrumpe la herencia de permisos de la biblioteca para restringir el acceso a los libros temporales de procesamiento.
+- Site Owners conserva el control total.
+- Los miembros de gestión autorizados reciben únicamente los permisos necesarios para la administración.
+- Las conexiones de Power Automate de procesamiento y limpieza reciben los permisos necesarios para crear, modificar, leer y eliminar archivos temporales.
+- Center Groups y External Staff no tienen acceso.
+- FL02 crea libros Excel temporales durante el procesamiento.
+- FL03 intenta eliminar los archivos temporales con más de ocho horas de antigüedad.
+- Los errores de eliminación se tratan mediante diagnósticos sin interrumpir el resto de las operaciones de limpieza.
+- Los permisos efectivos deben comprobarse en el entorno de SharePoint de destino.
 
-- Library-level permission inheritance is interrupted to restrict access to temporary processing workbooks.
-- Site Owners retain Full Control.
-- Authorized Management Members receive only the permissions required for administration.
-- Power Automate processing and cleanup connections receive the permissions necessary to create, modify, read, and delete temporary files.
-- Center Groups and External Staff have no access.
-- FL02 creates temporary Excel workbooks during processing.
-- FL03 attempts to delete temporary files older than eight hours.
-- Deletion failures are handled diagnostically without interrupting the remaining cleanup operations.
-- Effective permissions must be verified in the target SharePoint environment.
+### Biblioteca de exportaciones
 
+- Site Owners, Site Members y Center Groups reciben acceso de lectura.
+- Se excluye a External Staff.
+- FL02 crea libros de exportación mediante una conexión de SharePoint debidamente autorizada.
 
-### Export Library
+### Lista de registros procesados
 
-- Site Owners, Site Members, and Center Groups receive Read access.
-- External Staff are excluded.
-- FL02 creates export workbooks through an appropriately authorized SharePoint connection.
+- FL02 crea registros principales y asociados.
+- FL05 aplica permisos a nivel de elemento según el centro asignado.
+- FL05 recupera el SharePoint Group ID correspondiente de la lista de configuración de centros.
+- Los grupos de centros reciben acceso únicamente a los registros asignados expresamente a su grupo.
+- El acceso general de lectura al subsitio no concede automáticamente acceso a todos los registros procesados.
+- Site Owners recibe acceso de edición a los registros procesados.
+- Site Members recibe acceso de edición a los registros procesados.
 
-### Processed Records List
+### Lista de configuración de centros
 
-- FL02 creates primary and associated records.
-- FL05 applies item-level permissions based on the assigned center.
-- FL05 retrieves the relevant SharePoint Group ID from the Centers Configuration List.
-- Center Groups receive access only to records explicitly assigned to their group.
-- General subsite Read access does not automatically grant access to all processed records.
-- Site Owners receive Edit access to processed records.
-- Site Members receive Edit access to processed records.
+- Site Owners, Site Members y Center Groups reciben acceso de lectura.
+- Se excluye a External Staff.
+- Los cambios de configuración requieren permisos específicos.
+- Los enlaces de administración de grupos no conceden automáticamente privilegios para administrar dichos grupos.
 
-### Centers Configuration List
+### Lista de registros de ejecución
 
-- Site Owners, Site Members, and Center Groups receive Read access.
-- External Staff are excluded.
-- Configuration changes require separately authorized permissions.
-- Group management links do not automatically grant group administration privileges.
+- Se interrumpe la herencia de permisos a nivel de lista.
+- Site Owners y Site Members reciben acceso de lectura.
+- Se excluye a Center Groups y External Staff.
+- FL04 crea registros mediante una conexión de SharePoint debidamente autorizada.
 
-### Processing Logs List
+### Validación de permisos
 
-- List-level permission inheritance is interrupted.
-- Site Owners and Site Members receive Read access.
-- Center Groups and External Staff are excluded.
-- FL04 creates log entries through an appropriately authorized SharePoint connection.
+Todos los cambios de herencia y las asignaciones automatizadas de permisos deben probarse en un entorno controlado de SharePoint.
 
-### Permission Validation
+Es necesario verificar los permisos efectivos de los usuarios que pertenecen a varios grupos de SharePoint y de las conexiones de automatización que realizan operaciones privilegiadas.
 
-All permission inheritance changes and automated assignments must be tested in a controlled SharePoint environment.
+## 12. Integración con Power Automate
 
-Effective permissions must be verified for users belonging to multiple SharePoint groups and for automation connections performing privileged operations.
+El subsitio de gestión permite validar documentos, procesar Excel, crear registros, generar exportaciones, registrar ejecuciones y gestionar permisos basados en centros.
 
+La solución utiliza cinco flujos conceptuales de Power Automate.
 
-## 12. Power Automate Integration
+### 12.1 Responsabilidades de los flujos
 
-The Management Subsite supports document validation, Excel processing, record creation, export generation, execution logging, and center-based permission management.
-
-The solution uses five conceptual Power Automate workflows.
-
-### 12.1 Workflow Responsibilities
-
-| Workflow | Management Subsite Responsibility | Main Resources |
+| Flujo | Responsabilidad en el subsitio de gestión | Recursos principales |
 |---|---|---|
-| FL01 | Creates a copy of each submitted Excel attachment for internal validation | Validation Library |
-| FL02 | Processes validated Excel files, protects source documents, creates records, and generates export workbooks | Validation Library, Processed Records List, Export Library |
-| FL03 | Removes temporary processing files older than the configured retention threshold | Temporary processing files |
-| FL04 | Creates execution logs and returns the `Id_Log` identifier | Processing Logs List |
-| FL05 | Applies center-based item-level permissions using the configured SharePoint Group ID | Processed Records List, Centers Configuration List |
+| FL01 | Crea una copia de cada adjunto Excel recibido para su validación interna | Biblioteca de validación |
+| FL02 | Procesa archivos Excel validados, protege los documentos de origen, crea registros y genera libros de exportación | Biblioteca de validación, lista de registros procesados, biblioteca de exportaciones |
+| FL03 | Elimina archivos temporales de procesamiento que superan el umbral de retención configurado | Archivos temporales de procesamiento |
+| FL04 | Crea registros de ejecución y devuelve el identificador `Id_Log` | Lista de registros de ejecución |
+| FL05 | Aplica permisos a nivel de elemento basados en centros mediante el SharePoint Group ID configurado | Lista de registros procesados, lista de configuración de centros |
 
+### 12.2 Validación y procesamiento de documentos
 
-### 12.2 Document Validation and Processing
+1. FL01 crea una copia del documento Excel en la biblioteca de validación.
+2. Los usuarios autorizados de Site Owners o Site Members revisan y validan el documento.
+3. El estado del documento cambia a `Validated`, lo que desencadena FL02.
+4. FL02 interrumpe la herencia de permisos a nivel de archivo y asigna acceso de lectura a Site Owners y Site Members.
+5. FL02 cambia el estado del documento de `Validated` a `Processing`.
+6. FL02 procesa los datos de Excel y crea registros principales y asociados.
+7. FL02 genera el libro de exportación correspondiente.
+8. FL02 invoca FL04 para registrar los resultados y la información de diagnóstico.
+9. FL02 cambia el estado del documento a `Processed` cuando el procesamiento y el registro requerido finalizan correctamente, o a `Error` si no pueden completarse satisfactoriamente.
 
-1. FL01 creates an Excel document copy in the Validation Library.
-2. Authorized Site Owners or Site Members review and validate the document.
-3. The document status changes to `Validated`, triggering FL02.
-4. FL02 breaks file-level permission inheritance and assigns Read access to Site Owners and Site Members.
-5. FL02 updates the document status from `Validated` to `Processing`.
-6. FL02 processes the Excel data and creates primary and associated records.
-7. FL02 generates the corresponding export workbook.
-8. FL02 calls FL04 to register processing results and diagnostic information.
-9. FL02 updates the document status to `Processed` when processing and required logging complete successfully, or to `Error` if processing cannot complete successfully.
+El estado `Processing` indica que el documento está protegido y que el procesamiento está en curso. No garantiza que termine correctamente.
 
-The `Processing` status indicates that the document is protected and processing is underway. It does not guarantee successful completion.
+El estado final distingue entre procesamiento correcto (`Processed`) y errores de procesamiento o registro (`Error`).
 
-The final status distinguishes successful processing (`Processed`) from processing or logging failures (`Error`).
+### 12.3 Registro de ejecuciones y permisos
 
+FL02 invoca FL04 para registrar la información del procesamiento.
 
-### 12.3 Logging and Permissions
+FL04 crea una entrada en la lista de registros de ejecución y devuelve su identificador de elemento de SharePoint mediante el parámetro de salida `Id_Log`.
 
-FL02 calls FL04 to register processing information.
+FL05 obtiene la correspondencia entre centros y grupos de la lista de configuración de centros y asigna permisos a nivel de elemento a los registros procesados correspondientes.
 
-FL04 creates an entry in the Processing Logs List and returns its SharePoint item identifier through the `Id_Log` output parameter.
+### 12.4 Limpieza de archivos temporales
 
-FL05 retrieves the center-to-group mapping from the Centers Configuration List and assigns item-level permissions to the corresponding processed records.
+FL03 elimina los archivos temporales de procesamiento con más de ocho horas de antigüedad, según la configuración conceptual de limpieza.
 
-### 12.4 Temporary File Cleanup
+La limpieza debe limitarse a archivos temporales y no debe eliminar documentos de origen, registros validados ni exportaciones generadas.
 
-FL03 removes temporary processing files older than eight hours according to the conceptual cleanup configuration.
+### 12.5 Consideraciones de seguridad
 
-The cleanup process must target temporary files and must not remove source documents, validated records, or generated exports.
+Los flujos utilizan conexiones de SharePoint debidamente autorizadas.
 
-### 12.5 Security Considerations
+Los permisos de automatización se administran por separado de los permisos de los usuarios ordinarios.
 
-The workflows use appropriately authorized SharePoint connections.
+El personal externo no recibe acceso al subsitio de gestión a través del proceso de recepción de solicitudes.
 
-Automation permissions are managed separately from ordinary user permissions.
+Las definiciones detalladas de los flujos y las consideraciones de implementación se documentan en la sección de Power Automate del portfolio.
 
-External Staff do not receive access to the Management Subsite through the intake workflow.
+## 13. Seguridad y gobernanza
 
-The detailed workflow definitions and implementation considerations are documented in the Power Automate section of the portfolio.
+La solución sigue estos principios:
 
+- Acceso de mínimo privilegio.
+- Separación entre la recepción externa y la gestión interna.
+- Acceso restringido a los documentos de validación.
+- Protección de solo lectura de los documentos de origen procesados.
+- Aislamiento de registros según el centro.
+- Visibilidad restringida de los registros de ejecución.
+- Configuración centralizada de las correspondencias entre centros y grupos.
+- Control administrativo mediante Site Collection Administrators.
+- Revisión de permisos efectivos para usuarios que pertenecen a varios grupos.
 
-## 13. Security and Governance
+El formato JSON de SharePoint no se utiliza como mecanismo de seguridad.
 
-The solution follows these principles:
+La herencia de permisos y el acceso efectivo deben validarse en un entorno de pruebas antes del despliegue.
 
-- Least-privilege access.
-- Separation of external intake and internal management.
-- Restricted access to validation documents.
-- Read-only protection of processed source documents.
-- Center-based record isolation.
-- Restricted visibility of processing logs.
-- Centralized center-to-group configuration.
-- Administrative control through Site Collection Administrators.
-- Review of effective permissions for users belonging to multiple groups.
+## 14. Documentación relacionada
 
-SharePoint JSON formatting is not used as a security mechanism.
+- [Arquitectura de sitios de SharePoint](../architecture/sites-architecture.md)
+- [Sitio principal de SharePoint](main-site.md)
+- [Descripción general de SharePoint](../README.md)
+- [Formato de la barra de comandos de bibliotecas documentales](../formatting/document-library-commandbar.json)
 
-Permission inheritance and effective access must be validated in a test environment before deployment.
+## 15. Estado de la documentación
 
-## 14. Related Documentation
+**Estado:** documentación conceptual del subsitio de gestión completada.
 
-- [SharePoint Sites Architecture](../architecture/sites-architecture.md)
-- [Main SharePoint Site](main-site.md)
-- [SharePoint Overview](../README.md)
-- [Document Library Command Bar Formatting](../formatting/document-library-commandbar.json)
+Se han documentado los siguientes componentes:
 
+- Estructura del subsitio de gestión y roles de usuario.
+- Configuración de la biblioteca de validación y ciclo de protección documental.
+- Configuración de la biblioteca de exportaciones y modelo de acceso.
+- Estructura de la lista de registros procesados y permisos basados en centros.
+- Lista de configuración de centros y correspondencias con grupos de SharePoint.
+- Lista de registros de ejecución y seguimiento de ejecuciones.
+- Estrategias de permisos a nivel de recurso y de elemento.
+- Integración con los flujos FL01–FL05 de Power Automate.
+- Consideraciones de seguridad y gobernanza.
 
-## 15. Documentation Status
+### Validación de la implementación
 
-**Status:** Conceptual Management Subsite documentation complete.
+Los siguientes aspectos requieren validación en un entorno de SharePoint de destino:
 
-The following components are documented:
+- Configuración del subsitio de gestión y pertenencia a grupos.
+- Permisos efectivos de Site Owners, Site Members y Center Groups.
+- Herencia de permisos de la biblioteca de validación y protección de documentos procesados.
+- Permisos de acceso a la biblioteca de exportaciones.
+- Asignaciones de permisos a nivel de elemento realizadas por FL05.
+- Permisos y correspondencias entre centros y grupos de la lista de configuración de centros.
+- Permisos de registro y comportamiento de ejecución de FL04.
+- Conexiones de Power Automate y operaciones privilegiadas.
+- Pruebas integrales de procesamiento, supervisión y seguridad.
 
-- Management Subsite structure and user roles.
-- Validation Library configuration and document protection lifecycle.
-- Export Library configuration and access model.
-- Processed Records List structure and center-based permissions.
-- Centers Configuration List and SharePoint group mapping.
-- Processing Logs List and execution tracking.
-- Resource-level and item-level permission strategies.
-- Integration with Power Automate workflows FL01 through FL05.
-- Security and governance considerations.
-
-### Implementation Validation
-
-The following aspects require validation in a target SharePoint environment:
-
-- Management Subsite configuration and group membership.
-- Effective permissions for Site Owners, Site Members, and Center Groups.
-- Validation Library inheritance and processed document protection.
-- Export Library access permissions.
-- FL05 item-level permission assignments.
-- Centers Configuration List permissions and group mapping.
-- FL04 logging permissions and execution behavior.
-- Power Automate connections and privileged operations.
-- End-to-end processing, monitoring, and security testing.
-
-This document describes a conceptual implementation and is not an automated SharePoint provisioning template.
+Este documento describe una implementación conceptual y no constituye una plantilla de aprovisionamiento automatizado de SharePoint.
