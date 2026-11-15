@@ -1,353 +1,248 @@
+# Automatización de SharePoint y Excel
 
-# SharePoint & Excel Automation Pipeline
+## Descripción general del proyecto
 
-## Project Overview
+Este proyecto presenta una arquitectura integral de procesamiento documental y automatización mediante Microsoft Power Platform, SharePoint Online, Excel Online y Office Scripts.
 
-This project demonstrates an end-to-end document processing and automation architecture using Microsoft Power Platform, SharePoint Online, Excel Online, and Office Scripts.
+La solución automatiza el ciclo de vida de las solicitudes basadas en Excel: presentación, distribución de documentos, validación, tratamiento de datos, creación de registros, generación de exportaciones y gestión de permisos.
 
-The solution automates the lifecycle of Excel-based requests, from initial submission and document distribution to validation, data processing, record creation, export generation, and permission management.
+### Funcionamiento
 
-### How It Works
+1. **Presentación de solicitudes:** Los usuarios externos autorizados presentan solicitudes en una lista de SharePoint, adjuntando archivos Excel y observaciones.
+2. **Distribución documental:** Power Automate recupera los adjuntos y crea copias en la biblioteca de documentos derivados del sitio principal y en la biblioteca de validación del subsitio de gestión.
+3. **Validación:** Los usuarios de gestión autorizados revisan y validan los documentos antes de procesarlos.
+4. **Procesamiento de Excel:** Power Automate y Office Scripts extraen y transforman los datos para crear registros principales y asociados en SharePoint.
+5. **Generación de exportaciones:** La información procesada se incorpora a plantillas Excel estructuradas.
+6. **Gestión de permisos:** Se aplican permisos a documentos y registros, incluidas restricciones de acceso por centro.
+7. **Registro y mantenimiento:** Se registran las ejecuciones y se eliminan periódicamente los archivos temporales.
 
-1. **Request Submission:** Authorized external users submit requests through a SharePoint list, attaching Excel files and providing observations.
+### Características de la arquitectura
 
-2. **Document Distribution:** Power Automate retrieves the Excel attachments and creates copies in two SharePoint document libraries:
-   - Derived Documents Library in the Main SharePoint Site.
-   - Validation Library in the Management Subsite.
+- Arquitectura SharePoint de dos niveles: sitio principal y subsitio de gestión.
+- Cinco flujos coordinados de Power Automate (FL01–FL05).
+- Office Scripts para procesar datos estructurados de Excel.
+- Listas y bibliotecas de SharePoint con permisos diferenciados.
+- Seguridad dinámica por elemento basada en grupos configurables.
+- Registro de ejecuciones y mantenimiento de archivos temporales.
 
-3. **Document Validation:** Authorized management users review the submitted documents and validate them for processing.
+### Alcance del portfolio
 
-4. **Excel Processing:** Power Automate and Office Scripts extract and transform the Excel data, creating primary and associated SharePoint records.
+Se trata de una demostración independiente basada en un escenario empresarial ficticio. El repositorio contiene definiciones conceptuales de flujos, documentación técnica, ejemplos reutilizables de configuración y componentes de demostración desarrollados de forma independiente.
 
-5. **Export Generation:** Processed information is used to populate structured Excel export templates.
+**No es una solución de producción completamente desplegable.** No incluye información confidencial, credenciales reales ni exportaciones propietarias de flujos.
 
-6. **Permission Management:** SharePoint permissions are applied at document and record level, including center-based access restrictions.
-
-7. **Logging and Maintenance:** The solution records processing activity and performs scheduled cleanup of temporary files.
-
-### Architecture Highlights
-
-- Two-level SharePoint architecture with a Main Site and Management Subsite.
-- Five coordinated Power Automate workflows (FL01-FL05).
-- Office Scripts for structured Excel processing.
-- SharePoint lists and document libraries with differentiated access permissions.
-- Dynamic item-level security based on configurable SharePoint groups.
-- Execution logging and temporary file management.
-
-### Portfolio Scope
-
-This is an independent portfolio demonstration based on a fictional business scenario.
-
-The repository includes conceptual workflow definitions, technical documentation, reusable configuration examples, and independently developed demonstration components.
-
-It is not a fully deployable production solution.
-
-No confidential organizational information, real credentials, or proprietary workflow exports are included.
-
-
-## Technologies
+## Tecnologías
 
 - Microsoft Power Automate
 - SharePoint Online
 - Excel Online
 - Office Scripts
 - JSON
-- SharePoint REST API
+- API REST de SharePoint
 
+## Escenario empresarial
 
-## Business Scenario
+### El problema
 
-### The Challenge
+Una organización recibe archivos Excel estructurados de diferentes usuarios externos y centros operativos. Los documentos deben validarse, procesarse y convertirse en registros, con una distribución controlada de la información.
 
-An organization receives structured Excel files from multiple external users and operational centers.
+Sin automatización, el proceso puede requerir recopilación y organización manual de documentos, extracción repetitiva de datos, creación manual de registros, mantenimiento complejo de relaciones entre registros, administración de permisos por centro y seguimiento limitado de resultados y errores.
 
-These documents require validation, data processing, record creation, and controlled distribution of information.
+### La solución
 
-Without automation, this process may involve:
+La arquitectura centraliza la recepción de solicitudes en SharePoint y coordina las operaciones mediante Power Automate y Office Scripts. Incluye un proceso estandarizado de presentación, distribución documental automatizada, validación controlada, extracción y transformación de datos, creación secuencial de registros principales y asociados, exportaciones Excel, permisos por centro, registros centralizados de ejecución y limpieza programada.
 
-- Manual document collection and organization.
-- Repetitive Excel data extraction and transformation.
-- Manual creation of SharePoint records.
-- Difficulty maintaining relationships between related records.
-- Complex permission management across operational centers.
-- Limited visibility into processing results and errors.
+### Beneficios previstos
 
-### The Solution
+- Reducir tareas administrativas repetitivas.
+- Mejorar la coherencia del procesamiento documental.
+- Conservar las relaciones entre registros vinculados.
+- Facilitar el acceso controlado a información operativa sensible.
+- Mejorar la trazabilidad de las operaciones.
+- Simplificar el mantenimiento mediante configuración centralizada.
+- Ofrecer una base ampliable para futuras mejoras.
 
-The proposed architecture centralizes document intake through SharePoint and coordinates processing activities using Power Automate and Office Scripts.
+Estos beneficios son **objetivos de diseño**, no resultados medidos en un entorno de producción.
 
-The solution provides:
+## Componentes de la solución
 
-- A standardized request submission process.
-- Automated document distribution between SharePoint locations.
-- A controlled document validation stage.
-- Automated extraction and transformation of Excel data.
-- Sequential creation of primary and associated records.
-- Structured Excel export generation.
-- Center-based access control using SharePoint groups.
-- Centralized processing logs and scheduled temporary file cleanup.
+### Flujos de Power Automate
 
-### Business Benefits
-
-The architecture is designed to demonstrate how automation can:
-
-- Reduce repetitive administrative tasks.
-- Improve consistency in document processing.
-- Preserve relationships between related records.
-- Support controlled access to sensitive operational information.
-- Improve traceability of processing activities.
-- Simplify maintenance through centralized configuration.
-- Provide a scalable foundation for future workflow improvements.
-
-These benefits represent the intended design objectives of the demonstration architecture and have not been measured in a production environment.
-
-
-## Solution Components
-
-The solution combines five Power Automate workflows, Office Scripts, and SharePoint Online resources.
-
-### Power Automate Workflows
-
-| Component | Purpose |
+| Componente | Función |
 |---|---|
-| FL01 - Request Intake | Retrieves Excel attachments from SharePoint requests, distributes document copies to two libraries, and manages request-level permissions. |
-| FL02 - Excel Processing | Processes validated Excel documents, protects source files, creates primary and associated SharePoint records, and generates export workbooks. |
-| FL03 - Temporary File Cleanup | Performs scheduled cleanup of temporary processing files older than eight hours. |
-| FL04 - Processing Logs | Creates execution log entries and returns the `Id_Log` identifier to the calling workflow. |
-| FL05 - Dynamic Permissions | Assigns item-level SharePoint permissions based on center-to-group configuration. |
+| **FL01 - Recepción de solicitudes** | Recupera los Excel adjuntos, distribuye copias en dos bibliotecas y gestiona permisos de la solicitud. |
+| **FL02 - Procesamiento de Excel** | Procesa documentos validados, protege los originales, crea registros principales y asociados y genera libros de exportación. |
+| **FL03 - Limpieza de archivos temporales** | Elimina de forma programada archivos temporales de procesamiento con más de ocho horas de antigüedad. |
+| **FL04 - Registro de ejecuciones** | Crea registros de ejecución y devuelve el identificador `Id_Log` al flujo que lo invoca. |
+| **FL05 - Permisos dinámicos** | Asigna permisos por elemento de SharePoint según la configuración de correspondencia entre centros y grupos. |
 
-### Supporting Technologies
+### Tecnologías de apoyo
 
-| Component | Purpose |
+| Componente | Función |
 |---|---|
-| SharePoint Online | Provides request intake, document libraries, structured lists, and permission management. |
-| Excel Online | Supports workbook storage and integration with automated processing. |
-| Office Scripts | Performs structured Excel data processing and populates export templates. |
-| SharePoint REST API | Supports advanced SharePoint operations, including permission inheritance and role assignments. |
-| JSON | Supports data exchange, conceptual workflow definitions, and SharePoint interface customizations. |
+| SharePoint Online | Recepción de solicitudes, bibliotecas, listas estructuradas y permisos. |
+| Excel Online | Almacenamiento e integración de libros con el procesamiento automatizado. |
+| Office Scripts | Tratamiento de datos Excel y cumplimentación de plantillas de exportación. |
+| API REST de SharePoint | Operaciones avanzadas, como ruptura de herencia y asignación de roles. |
+| JSON | Intercambio de datos, definiciones conceptuales de flujos y personalización de interfaces. |
 
-### Component Coordination
+### Coordinación de componentes
 
-FL01 manages request intake and document distribution.
+**FL01** recibe y distribuye solicitudes. **FL02** procesa documentos validados y coordina la creación de registros y exportaciones. **FL04** centraliza el registro de ejecuciones, mientras que **FL05** aplica permisos por centro a los registros procesados. **FL03** ejecuta de manera independiente la limpieza programada de archivos temporales.
 
-FL02 performs validated document processing and coordinates record creation and export generation.
+Esta separación permite distinguir responsabilidades de recepción, procesamiento, seguridad, seguimiento y mantenimiento.
 
-FL04 supports execution logging, while FL05 applies center-based permissions to processed records.
+## Aspectos técnicos destacados
 
-FL03 independently performs scheduled cleanup of temporary processing files.
+### Orquestación con Power Automate
 
-Together, these components demonstrate a modular architecture that separates document intake, processing, security, logging, and maintenance responsibilities.
+- Flujos basados en eventos de listas y documentos de SharePoint.
+- Condiciones de desencadenador para controlar las ejecuciones.
+- Coordinación entre varios procesos automatizados.
+- Integración de un flujo secundario para centralizar registros.
+- Automatizaciones programadas para la limpieza temporal.
+- Separación modular entre procesamiento, permisos y registro.
 
+### Automatización de Excel con Office Scripts
 
+- Integración de Power Automate con Excel Online.
+- Ejecución de scripts para tratar datos estructurados.
+- Intercambio de datos JSON entre scripts y flujos.
+- Procesamiento secuencial para preservar relaciones entre registros principales y asociados.
+- Cumplimentación automática de plantillas de exportación.
 
-## Technical Highlights
+### Arquitectura y seguridad de SharePoint
 
-This project demonstrates several Microsoft Power Platform and SharePoint automation design patterns.
+- Sitio principal y subsitio de gestión.
+- Listas y bibliotecas con permisos diferenciados.
+- Gestión de herencia de permisos a nivel de archivo.
+- Permisos dinámicos por elemento mediante API REST.
+- Correspondencia centro-grupo en una lista centralizada.
+- Separación entre permisos de usuarios y privilegios de conexiones de automatización.
 
-### Power Automate Orchestration
+### Datos y trazabilidad
 
-- Event-driven workflows triggered by SharePoint list and document events.
-- Trigger conditions to control workflow execution.
-- Coordination between multiple automated processes.
-- Child flow integration for centralized execution logging.
-- Scheduled automation for temporary file cleanup.
-- Modular separation of processing, permissions, and logging responsibilities.
+- Creación de registros principales y asociados.
+- Conservación de relaciones mediante identificadores.
+- Registro de ejecuciones con un flujo secundario específico.
+- Seguimiento de estados y notificación de errores.
+- Limpieza programada de documentos temporales.
 
-### Excel Automation with Office Scripts
+### Principios reutilizables
 
-- Integration between Power Automate and Excel Online.
-- Execution of Office Scripts for structured data processing.
-- JSON-based data exchange between scripts and workflows.
-- Sequential record processing to preserve parent-child relationships.
-- Automated population of Excel export templates.
+Arquitectura modular, configuración centralizada, separación de responsabilidades, mínimo privilegio, mantenibilidad, extensibilidad y documentación técnica basada en datos ficticios.
 
-### SharePoint Architecture and Security
+Estas capacidades se ilustran mediante definiciones conceptuales, documentación y componentes de demostración seleccionados.
 
-- Main Site and Management Subsite architecture.
-- SharePoint lists and document libraries with differentiated permissions.
-- File-level permission inheritance management.
-- Dynamic item-level permissions using SharePoint REST API.
-- Center-to-group mapping through a centralized configuration list.
-- Separation of ordinary user permissions and automation connection privileges.
+## Componentes y documentación del proyecto
 
-### Data Processing and Traceability
+### Flujos de Power Automate
 
-- Creation of primary and associated SharePoint records.
-- Preservation of parent-child relationships using record identifiers.
-- Execution logging through a dedicated child workflow.
-- Processing status tracking and error reporting.
-- Scheduled cleanup of temporary processing files.
+Cada flujo dispone de un README técnico y un ejemplo JSON de su arquitectura conceptual.
 
-### Reusable Design Principles
-
-- Modular workflow architecture.
-- Configuration-driven permission management.
-- Separation of responsibilities.
-- Least-privilege access design.
-- Maintainability and extensibility.
-- Documentation-first development using fictional demonstration data.
-
-These capabilities are illustrated through conceptual workflow definitions, technical documentation, and selected independently developed demonstration components.
-
-
-## Project Components & Documentation
-
-This project includes Power Automate workflows, Office Scripts, and sample Excel files demonstrating an integrated document processing solution.
-
-
-### Power Automate Workflows
-
-The solution includes five documented conceptual workflows, each with a dedicated technical README and JSON architecture example.
-
-| Workflow | Main Responsibility | Documentation | Conceptual JSON |
+| Flujo | Responsabilidad | Documentación | JSON conceptual |
 |---|---|---|---|
-| FL01 - Request Intake | SharePoint request submission, Excel attachment distribution, and request permissions | [README](flows/FL01-demo/README.md) | [JSON](flows/FL01-demo/FL01-demo.json) |
-| FL02 - Excel Processing | Document validation, Excel processing, SharePoint record creation, and export generation | [README](flows/FL02-demo/README.md) | [JSON](flows/FL02-demo/FL02-demo.json) |
-| FL03 - Temporary Cleanup | Scheduled removal of temporary processing files older than eight hours | [README](flows/FL03-demo/README.md) | [JSON](flows/FL03-demo/FL03-demo.json) |
-| FL04 - Processing Logs | Centralized execution logging and return of the `Id_Log` identifier | [README](flows/FL04-demo/README.md) | [JSON](flows/FL04-demo/FL04-demo.json) |
-| FL05 - Dynamic Permissions | Center-based SharePoint item-level permission assignments | [README](flows/FL05-demo/README.md) | [JSON](flows/FL05-demo/FL05-demo.json) |
+| FL01 - Recepción de solicitudes | Solicitudes SharePoint, distribución de adjuntos y permisos | [README](flows/FL01-demo/README.md) | [JSON](flows/FL01-demo/FL01-demo.json) |
+| FL02 - Procesamiento de Excel | Validación, datos, registros y exportaciones | [README](flows/FL02-demo/README.md) | [JSON](flows/FL02-demo/FL02-demo.json) |
+| FL03 - Limpieza temporal | Eliminación de archivos temporales de más de ocho horas | [README](flows/FL03-demo/README.md) | [JSON](flows/FL03-demo/FL03-demo.json) |
+| FL04 - Registro de ejecuciones | Registro centralizado y devolución de `Id_Log` | [README](flows/FL04-demo/README.md) | [JSON](flows/FL04-demo/FL04-demo.json) |
+| FL05 - Permisos dinámicos | Permisos por elemento según el centro | [README](flows/FL05-demo/README.md) | [JSON](flows/FL05-demo/FL05-demo.json) |
 
-The JSON files describe conceptual workflow structures for learning and portfolio purposes.
-
-They are not directly importable Power Automate flow packages.
-
-
+**Importante:** Los JSON describen estructuras conceptuales y **no son paquetes de flujos directamente importables en Power Automate**.
 
 ### Office Scripts
 
-Office Scripts provide the Excel processing capabilities used by the automation architecture.
+Los scripts desarrollados en TypeScript ilustran el procesamiento de datos estructurados y la generación de libros Excel mediante Power Automate.
 
-They demonstrate how TypeScript-based scripts can be integrated with Power Automate to process structured workbook data and populate predefined export templates.
-
-| Script | Responsibility | Source Code |
+| Script | Responsabilidad | Código |
 |---|---|---|
-| process-records.ts | Reads and processes structured Excel records, preparing data for subsequent Power Automate operations. | [View Script](office-scripts/process-records.ts) |
-| populate-export-template.ts | Populates a predefined Excel template using processed data to generate structured output workbooks. | [View Script](office-scripts/populate-export-template.ts) |
+| `process-records.ts` | Lee registros estructurados y prepara datos para operaciones posteriores. | [Ver script](office-scripts/process-records.ts) |
+| `populate-export-template.ts` | Cumplimenta una plantilla Excel predefinida con los datos procesados. | [Ver script](office-scripts/populate-export-template.ts) |
 
-#### Integration with FL02
+#### Integración con FL02
 
-FL02 coordinates the Excel processing lifecycle.
+1. Lectura de datos de los libros validados.
+2. Preparación de información para crear registros.
+3. Transformación al formato de salida previsto.
+4. Cumplimentación de plantillas Excel de exportación.
 
-Office Scripts support the workflow by:
+La creación de registros SharePoint, la asignación de permisos y el registro de ejecuciones corresponden a los flujos de Power Automate.
 
-1. Reading structured data from validated Excel workbooks.
-2. Preparing information for record creation.
-3. Supporting the transformation of data into the required output structure.
-4. Populating predefined Excel export templates.
+Los scripts son componentes independientes de demostración y pueden necesitar adaptaciones a las estructuras de libros, conexiones y entornos de destino.
 
-SharePoint record creation, permission assignments, and execution logging are managed by the corresponding Power Automate workflows.
+[Explorar Office Scripts](office-scripts/)
 
-#### Portfolio Scope
+### Archivos Excel de ejemplo
 
-The scripts are independently developed demonstration components.
-
-They illustrate reusable Excel automation techniques and may require adaptation to specific workbook structures, Power Automate connections, and target environments.
-
-[Explore all Office Scripts](office-scripts/)
-
-
-
-### Sample Excel Files
-
-The project includes fictional Excel datasets and templates designed to illustrate the document processing architecture.
-
-These files support the demonstration of structured data intake, transformation, and export generation.
-
-| File | Purpose | File |
+| Archivo | Finalidad | Enlace |
 |---|---|---|
-| sample-records.xlsx | Example structured Excel data representing records submitted for processing. | [View File](sample-data/sample-records.xlsx) |
-| export-template.xlsx | Example Excel workbook template used to illustrate structured export generation. | [View File](sample-data/export-template.xlsx) |
+| `sample-records.xlsx` | Datos ficticios estructurados para procesar. | [Ver archivo](sample-data/sample-records.xlsx) |
+| `export-template.xlsx` | Plantilla de libro Excel para ilustrar la exportación. | [Ver archivo](sample-data/export-template.xlsx) |
 
-#### Role in the Automation Process
+#### Papel en el proceso
 
-1. A structured Excel workbook is submitted through the SharePoint Request Intake List.
-2. FL01 distributes document copies to the corresponding SharePoint libraries.
-3. Authorized users validate the document.
-4. FL02 coordinates Excel data processing using Office Scripts.
-5. The processed information is used to create SharePoint records and populate an export workbook.
+1. Se adjunta un Excel estructurado a la lista de recepción de solicitudes.
+2. FL01 distribuye las copias entre bibliotecas.
+3. Los usuarios autorizados validan el documento.
+4. FL02 coordina el procesamiento mediante Office Scripts.
+5. Los datos se utilizan para crear registros SharePoint y completar un libro de exportación.
 
-#### Demonstration Scope
+Los datos son ficticios. Los libros representan los conceptos de entrada y salida y pueden requerir ajustes para adaptarse a los scripts, estructuras y entornos concretos.
 
-All sample data is fictional.
+[Explorar datos de ejemplo](sample-data/)
 
-The workbooks illustrate the expected input and output concepts of the solution.
+### Documentación técnica
 
-They are not production datasets and may require adjustments to match specific Office Scripts, workbook structures, and target environments.
+Diagramas de arquitectura, notas de implementación y documentación complementaria.
 
-[Explore all Sample Data](sample-data/)
+[Explorar documentación](docs/)
 
+### Arquitectura y configuración de SharePoint
 
+La arquitectura contempla un sitio principal y un subsitio de gestión, que cubren la recepción, validación, procesamiento, registros, permisos y seguimiento.
 
-### Technical Documentation
+#### Arquitectura de sitios
 
-Architecture diagrams, implementation notes, and supporting technical documentation.
-
-
-[Explore Documentation](docs/)
-
-
-### SharePoint Architecture & Configuration
-
-The project includes a documented SharePoint Online architecture consisting of a Main SharePoint Site and a Management Subsite.
-
-The architecture covers request intake, document validation, Excel processing, record management, permissions, and execution logging.
-
-#### Site Architecture
-
-| Component | Documentation |
+| Componente | Documentación |
 |---|---|
-| SharePoint Overview | [View Documentation](Sharepoint/README.md) |
-| Sites Architecture | [View Architecture](Sharepoint/architecture/sites-architecture.md) |
-| Main SharePoint Site | [View Main Site](Sharepoint/sites/main-site.md) |
-| Management Subsite | [View Management Subsite](Sharepoint/sites/management-subsite.md) |
+| Descripción de SharePoint | [Ver documentación](Sharepoint/README.md) |
+| Arquitectura de sitios | [Ver arquitectura](Sharepoint/architecture/sites-architecture.md) |
+| Sitio principal | [Ver sitio](Sharepoint/sites/main-site.md) |
+| Subsitio de gestión | [Ver subsitio](Sharepoint/sites/management-subsite.md) |
 
-#### SharePoint Lists
+#### Listas de SharePoint
 
-| List | Purpose | Documentation |
+| Lista | Función | Documentación |
 |---|---|---|
-| Request Intake List | Receives requests and Excel attachments from authorized external users | [View](Sharepoint/lists/request-intake.md) |
-| Processed Records List | Stores primary and associated records with center-based permissions | [View](Sharepoint/lists/processed-records.md) |
-| Centers Configuration List | Maintains center-to-SharePoint-group mappings | [View](Sharepoint/lists/centers-configuration.md) |
-| Processing Logs List | Stores processing execution and diagnostic information | [View](Sharepoint/lists/processing-logs.md) |
+| Lista de recepción de solicitudes | Recibe solicitudes y adjuntos Excel de usuarios externos autorizados. | [Ver](Sharepoint/lists/request-intake.md) |
+| Lista de registros procesados | Almacena registros principales y asociados con permisos por centro. | [Ver](Sharepoint/lists/processed-records.md) |
+| Lista de configuración de centros | Mantiene la correspondencia entre centros y grupos de SharePoint. | [Ver](Sharepoint/lists/centers-configuration.md) |
+| Lista de registros de procesamiento | Guarda información de ejecuciones y diagnósticos. | [Ver](Sharepoint/lists/processing-logs.md) |
 
-#### Document Libraries
+#### Bibliotecas documentales
 
-| Library | Purpose | Documentation |
+| Biblioteca | Función | Documentación |
 |---|---|---|
-| Derived Documents Library | Provides read-only access to document copies in the Main Site | [View](Sharepoint/libraries/derived-documents.md) |
-| Validation Library | Stores Excel files awaiting validation and applies processed document protection | [View](Sharepoint/libraries/validation-library.md) |
-| Temporary Files Library | Stores temporary Excel workbooks used during processing and cleaned up by FL03 after eight hours | [View](Sharepoint/libraries/temporary-files-library.md) |
-| Export Library | Stores generated Excel export workbooks | [View](Sharepoint/libraries/export-library.md) |
+| Documentos derivados | Acceso de solo lectura a copias documentales en el sitio principal. | [Ver](Sharepoint/libraries/derived-documents.md) |
+| Validación | Documentos pendientes de validar y protección de los ya procesados. | [Ver](Sharepoint/libraries/validation-library.md) |
+| Archivos temporales | Libros temporales utilizados durante el procesamiento, limpiados por FL03 tras ocho horas. | [Ver](Sharepoint/libraries/temporary-files-library.md) |
+| Exportaciones | Almacena los libros Excel de exportación generados. | [Ver](Sharepoint/libraries/export-library.md) |
 
-#### JSON Customizations
+#### Personalizaciones JSON
 
-| Component | Purpose | Example |
+| Componente | Función | Ejemplo |
 |---|---|---|
-| Request Intake Form | Conceptual form layout for observations and attachments | [View JSON](Sharepoint/forms/request-intake-form.json) |
-| Request Intake Command Bar | Customizes available commands in the request list interface | [View JSON](Sharepoint/formatting/request-intake-view.json) |
-| Document Library Command Bar | Simplifies selected document library commands | [View JSON](Sharepoint/formatting/document-library-commandbar.json) |
+| Formulario de solicitudes | Diseño conceptual del formulario de observaciones y adjuntos. | [Ver JSON](Sharepoint/forms/request-intake-form.json) |
+| Barra de comandos de solicitudes | Personalización de los comandos disponibles en la lista. | [Ver JSON](Sharepoint/formatting/request-intake-view.json) |
+| Barra de comandos de bibliotecas | Simplificación de determinados comandos de biblioteca. | [Ver JSON](Sharepoint/formatting/document-library-commandbar.json) |
 
-#### Security and Implementation Scope
+#### Seguridad y alcance
 
-The SharePoint architecture demonstrates:
+La documentación muestra permisos a nivel de sitio y recurso, protección de archivos procesados, control de acceso por centro a nivel de elemento, configuración centralizada de grupos y separación entre recepción externa y gestión interna.
 
-- Site-level and resource-level permissions.
-- File-level protection of processed documents.
-- Center-based item-level access control.
-- Centralized SharePoint group configuration.
-- Separation of external request intake and internal management resources.
+Son patrones de arquitectura y configuración reutilizables, **no un paquete de aprovisionamiento SharePoint completamente desplegable**.
 
-The documentation describes reusable architecture and configuration patterns.
-
-It is not a fully deployable SharePoint provisioning package.
-
-> All examples use fictional data and independently developed demonstration components. Conceptual workflow JSON files are not directly importable into Power Automate.
-
-
-
-## Repository Structure
-
-The project is organized into dedicated folders for workflow definitions, Excel automation scripts, sample data, technical documentation, and SharePoint architecture.
+## Estructura del repositorio
 
 ```text
 SharePoint-Excel-Automation/
@@ -370,7 +265,7 @@ SharePoint-Excel-Automation/
 |   `-- export-template.xlsx
 |
 |-- docs/
-|   `-- Technical documentation
+|   `-- Documentación técnica
 |
 `-- Sharepoint/
     |-- README.md
@@ -382,125 +277,100 @@ SharePoint-Excel-Automation/
     `-- formatting/
 ```
 
-### Folder Responsibilities
+### Función de cada carpeta
 
-| Folder | Description |
+| Carpeta | Contenido |
 |---|---|
-| `flows/` | Conceptual Power Automate workflow definitions and technical documentation. |
-| `office-scripts/` | TypeScript-based Office Scripts for Excel data processing and export generation. |
-| `sample-data/` | Fictional Excel input files and export templates. |
-| `docs/` | Supporting technical documentation and architecture notes. |
-| `Sharepoint/` | SharePoint sites, lists, libraries, permissions, forms, and JSON formatting examples. |
+| `flows/` | Definiciones conceptuales de flujos y documentación técnica. |
+| `office-scripts/` | Scripts TypeScript para procesamiento de datos Excel y exportaciones. |
+| `sample-data/` | Archivos Excel ficticios y plantillas. |
+| `docs/` | Documentación técnica y notas de arquitectura. |
+| `Sharepoint/` | Sitios, listas, bibliotecas, permisos, formularios y ejemplos JSON. |
 
-### Navigation
+### Navegación
 
-- [Explore Power Automate Workflows](flows/)
-- [Explore Office Scripts](office-scripts/)
-- [Explore Sample Excel Files](sample-data/)
-- [Explore Technical Documentation](docs/)
-- [Explore SharePoint Architecture](Sharepoint/)
+- [Flujos de Power Automate](flows/)
+- [Office Scripts](office-scripts/)
+- [Archivos Excel de ejemplo](sample-data/)
+- [Documentación técnica](docs/)
+- [Arquitectura de SharePoint](Sharepoint/)
 
-The repository structure separates automation logic, supporting scripts, sample data, and SharePoint configuration documentation to improve readability and maintainability.
+La estructura separa la lógica de automatización, los scripts, los datos de ejemplo y la configuración de SharePoint para facilitar la lectura y el mantenimiento.
 
+## Estado del proyecto
 
+**Estado: arquitectura conceptual y documentación técnica completadas.**
 
-## Project Status
+### Documentación completada
 
-**Status: Conceptual architecture and technical documentation complete.**
+- Cinco flujos de Power Automate (FL01–FL05).
+- Definiciones JSON conceptuales de cada flujo.
+- Dos Office Scripts desarrollados de forma independiente.
+- Datos ficticios de entrada y plantillas Excel de exportación.
+- Arquitectura de sitio principal y subsitio de gestión.
+- Cuatro listas y cuatro bibliotecas documentales de SharePoint.
+- Ejemplos JSON de formato de listas y formularios.
+- Estrategias de permisos por documento y elemento.
+- Configuración de accesos por centro.
+- Registros de procesamiento y limpieza temporal.
+- Documentación técnica y navegación del repositorio.
 
-This portfolio project demonstrates an integrated Microsoft Power Platform and SharePoint automation architecture.
+### Alcance de implementación
 
-### Completed Documentation
+El repositorio contiene definiciones conceptuales de flujos, scripts de apoyo, archivos ficticios y documentación de arquitectura. Los JSON no son flujos importables directamente y el proyecto no se distribuye como solución Power Platform o paquete de aprovisionamiento SharePoint completamente desplegable.
 
-- Five Power Automate workflows (FL01-FL05).
-- Conceptual JSON definitions for each workflow.
-- Two independently developed Office Scripts.
-- Fictional Excel input data and export templates.
-- Main SharePoint Site and Management Subsite architecture.
-- Four SharePoint lists and four document libraries.
-- SharePoint JSON formatting and request form examples.
-- Document-level and item-level permission strategies.
-- Center-based access configuration.
-- Processing logs and temporary file cleanup.
-- Technical documentation and repository navigation.
+### Posibles mejoras futuras
 
-### Implementation Scope
+- Crear flujos ejecutables de demostración en un entorno de pruebas.
+- Validar los Office Scripts con los archivos Excel incluidos.
+- Probar permisos con grupos ficticios de usuarios.
+- Incorporar despliegue automatizado y configuración por entorno.
+- Añadir capturas de ejecuciones y escenarios de demostración.
+- Documentar pruebas integrales de extremo a extremo.
+- Ampliar los ejemplos de tratamiento de errores y monitorización.
 
-The repository provides conceptual workflow definitions, supporting scripts, fictional sample files, and architecture documentation.
+### Objetivo del portfolio
 
-The conceptual Power Automate JSON files are not directly importable as production flows.
+Demostrar competencias de arquitectura de soluciones, orquestación de Power Automate, diseño de seguridad en SharePoint, automatización de Excel y documentación técnica.
 
-The project is not distributed as a fully deployable Power Platform solution or SharePoint provisioning package.
+Todos los ejemplos tienen fines de aprendizaje, demostración y presentación profesional.
 
-### Potential Future Improvements
+## Seguridad y confidencialidad
 
-- Build executable demonstration flows in a dedicated test environment.
-- Validate Office Scripts against the provided Excel samples.
-- Test SharePoint permission assignments with fictional user groups.
-- Introduce automated deployment and environment configuration.
-- Add workflow execution screenshots and demonstration scenarios.
-- Document end-to-end testing results.
-- Expand error handling and monitoring examples.
+Este repositorio es una demostración independiente para aprendizaje, documentación técnica y portfolio profesional.
 
-### Portfolio Objective
+### Protección de datos
 
-The purpose of this project is to demonstrate solution architecture, Power Automate orchestration, SharePoint security design, Excel automation, and technical documentation practices.
+Los ejemplos utilizan escenarios genéricos y datos ficticios. La documentación pública no incluye intencionadamente:
 
-All examples are intended for learning, demonstration, and professional portfolio purposes.
+- Datos personales o de clientes reales.
+- Credenciales corporativas o tokens de autenticación.
+- Direcciones SharePoint de producción o identificadores reales de tenant.
+- Identificadores reales de grupos SharePoint o enlaces administrativos internos.
+- Exportaciones propietarias de flujos o lógica empresarial confidencial.
+- Documentos o conjuntos de datos internos de organizaciones.
 
+### Componentes independientes de demostración
 
+La arquitectura y los ejemplos se presentan como materiales desarrollados de manera independiente. Los JSON conceptuales de Power Automate no son exportaciones directas de un entorno corporativo de producción. Los Office Scripts y demás ejemplos pueden necesitar adaptaciones antes de utilizarse en otro entorno.
 
-## Security and Confidentiality
+### Seguridad en SharePoint
 
-This repository is an independent demonstration project intended for learning, technical documentation, and professional portfolio purposes.
+El diseño ilustra:
 
-### Data Protection
+- Principio de mínimo privilegio.
+- Separación de recursos externos e internos.
+- Gestión de permisos por documento y elemento.
+- Restricciones de acceso por centro.
+- Control administrativo mediante roles autorizados de SharePoint.
+- Separación de permisos de usuario y privilegios de las conexiones de automatización.
 
-The examples are designed to use fictional data and generic business scenarios.
+**El formato JSON de SharePoint personaliza la interfaz, pero no constituye un mecanismo de seguridad.**
 
-The public documentation does not intentionally include:
+### Responsabilidad de implementación
 
-- Real personal or customer information.
-- Corporate credentials or authentication tokens.
-- Production SharePoint URLs or tenant identifiers.
-- Real SharePoint group IDs or internal administrative links.
-- Proprietary workflow exports or confidential business logic.
-- Internal organizational documents or datasets.
+Antes de adaptar la solución a un entorno real, los administradores deben revisar permisos y pertenencia a grupos; validar conexiones y autenticación; sustituir valores ficticios por configuraciones autorizadas; probar ejecuciones y errores; comprobar requisitos de protección de datos y cumplimiento; y verificar los permisos efectivos con cuentas de prueba específicas.
 
-### Independent Demonstration Components
+### Aviso
 
-The architecture and examples are presented as independently developed demonstration materials.
-
-Conceptual Power Automate JSON files illustrate workflow design and are not direct exports from an organizational production environment.
-
-Office Scripts and supporting examples are provided for demonstration and may require adaptation before use in another environment.
-
-### SharePoint Security
-
-The documented solution demonstrates:
-
-- Least-privilege access principles.
-- Separation of external and internal resources.
-- Document-level and item-level permission management.
-- Center-based access restrictions.
-- Administrative control through authorized SharePoint roles.
-- Separation of ordinary user access and automation connection privileges.
-
-SharePoint JSON formatting is used for interface customization and is not a security mechanism.
-
-### Implementation Responsibility
-
-Before adapting the solution to a real environment, administrators should:
-
-- Review all SharePoint permissions and group memberships.
-- Validate Power Automate connections and authentication.
-- Replace fictional configuration values with authorized environment-specific settings.
-- Test workflow execution and error handling.
-- Verify data protection and organizational compliance requirements.
-- Validate effective permissions using dedicated test accounts.
-
-### Disclaimer
-
-This repository does not provide a production-ready or fully deployable solution.
-
-All architecture descriptions, workflow definitions, and configuration examples are intended to demonstrate technical concepts and reusable design patterns.
+**Este repositorio no proporciona una solución lista para producción ni completamente desplegable.** Todas las descripciones de arquitectura, definiciones de flujos y configuraciones se ofrecen para demostrar conceptos técnicos y patrones de diseño reutilizables.
