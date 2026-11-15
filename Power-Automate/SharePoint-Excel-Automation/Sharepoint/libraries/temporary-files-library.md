@@ -1,157 +1,155 @@
+# Biblioteca de archivos temporales
 
-# Temporary Files Library
+## 1. Descripción general
 
-## 1. Overview
+La biblioteca de archivos temporales (*Temporary Files Library*) es una biblioteca de documentos de SharePoint Online ubicada en el subsitio de gestión.
 
-The Temporary Files Library is a SharePoint Online document library located in the Management Subsite.
+Proporciona una ubicación específica para almacenar los libros de Excel temporales generados durante el procesamiento automatizado.
 
-It provides a dedicated storage location for temporary Excel workbooks generated during automated processing.
+Los flujos de Power Automate FL02 y FL03 utilizan esta biblioteca para separar los archivos de trabajo de los documentos originales y de los archivos de exportación definitivos.
 
-The library is used by Power Automate workflows FL02 and FL03 to separate working files from original documents and final export files.
+Todos los recursos descritos en este documento son conceptuales y utilizan información ficticia.
 
-All resources described in this document are conceptual and use fictional information.
+## 2. Configuración de la biblioteca
 
-## 2. Library Configuration
-
-| Property | Value |
+| Propiedad | Valor |
 |---|---|
-| Library Name | Temporary Files Library |
-| SharePoint Location | Management Subsite |
-| Resource Type | Document Library |
-| Primary Purpose | Temporary Excel processing |
-| Main Workflow | FL02 - Excel Processing |
-| Maintenance Workflow | FL03 - Temporary File Cleanup |
-| Retention Threshold | 8 hours |
-| Access Model | Restricted to authorized processing and administration accounts |
+| Nombre de la biblioteca | Temporary Files Library |
+| Ubicación en SharePoint | Subsitio de gestión |
+| Tipo de recurso | Biblioteca de documentos |
+| Finalidad principal | Procesamiento temporal de Excel |
+| Flujo principal | FL02 - Procesamiento de Excel |
+| Flujo de mantenimiento | FL03 - Limpieza de archivos temporales |
+| Umbral de conservación | 8 horas |
+| Modelo de acceso | Restringido a cuentas autorizadas de procesamiento y administración |
 
-## 3. Business Purpose
+## 3. Finalidad funcional
 
-The library provides an isolated workspace for automated Excel processing.
+La biblioteca proporciona un espacio de trabajo aislado para el procesamiento automatizado de Excel.
 
-Its main objectives are:
+Sus principales objetivos son:
 
-- Prevent temporary processing files from mixing with validated source documents.
-- Separate working copies from final export documents.
-- Support Office Scripts execution through Power Automate.
-- Reduce unnecessary document accumulation.
-- Simplify automated maintenance and troubleshooting.
+- Evitar que los archivos temporales de procesamiento se mezclen con los documentos de origen validados.
+- Separar las copias de trabajo de los documentos de exportación definitivos.
+- Facilitar la ejecución de Office Scripts mediante Power Automate.
+- Reducir la acumulación innecesaria de documentos.
+- Simplificar el mantenimiento automatizado y el diagnóstico de incidencias.
 
-## 4. Integration with FL02
+## 4. Integración con FL02
 
-FL02 uses the Temporary Files Library during Excel processing.
+FL02 utiliza la biblioteca de archivos temporales durante el procesamiento de Excel.
 
-### Processing Sequence
+### Secuencia de procesamiento
 
-1. FL02 detects a validated Excel document in the Validation Library.
-2. The workflow retrieves the source workbook.
-3. A temporary working copy is created in the Temporary Files Library.
-4. Office Scripts processes the temporary workbook.
-5. The extracted information is used to create SharePoint records.
-6. Final output workbooks are stored in the Export Library.
-7. Temporary working files remain subject to automated cleanup by FL03.
+1. FL02 detecta un documento Excel validado en la biblioteca de validación.
+2. El flujo recupera el libro de origen.
+3. Se crea una copia temporal de trabajo en la biblioteca de archivos temporales.
+4. Office Scripts procesa el libro temporal.
+5. La información extraída se utiliza para crear registros en SharePoint.
+6. Los libros de resultados definitivos se almacenan en la biblioteca de exportaciones.
+7. Los archivos temporales de trabajo quedan sujetos a la limpieza automatizada de FL03.
 
-The original validated workbook remains separate from temporary processing operations.
+El libro original validado permanece separado de las operaciones temporales de procesamiento.
 
-## 5. Integration with FL03
+## 5. Integración con FL03
 
-FL03 is responsible for removing temporary files that exceed the configured retention threshold.
+FL03 se encarga de eliminar los archivos temporales que superan el umbral de conservación configurado.
 
-### Cleanup Sequence
+### Secuencia de limpieza
 
-1. FL03 starts according to its configured recurrence schedule.
-2. The workflow retrieves files from the Temporary Files Library.
-3. Each file is evaluated against the retention threshold.
-4. Files older than 8 hours are selected for deletion.
-5. The workflow attempts to delete each eligible file.
-6. Deletion failures are recorded for diagnostic purposes.
+1. FL03 se inicia según la programación de recurrencia configurada.
+2. El flujo obtiene los archivos de la biblioteca de archivos temporales.
+3. Cada archivo se evalúa con respecto al umbral de conservación.
+4. Se seleccionan para su eliminación los archivos con más de 8 horas de antigüedad.
+5. El flujo intenta eliminar cada archivo que cumple los criterios.
+6. Los errores de eliminación se registran con fines de diagnóstico.
 
-### Retention Policy
+### Política de conservación
 
-| Property | Configuration |
+| Propiedad | Configuración |
 |---|---|
-| Retention Threshold | 8 hours |
-| Cleanup Mechanism | Power Automate FL03 |
-| Execution Frequency | To be defined during implementation |
-| Deletion Scope | Temporary processing files only |
-| Failure Handling | Diagnostic tracking and subsequent review |
+| Umbral de conservación | 8 horas |
+| Mecanismo de limpieza | Power Automate FL03 |
+| Frecuencia de ejecución | Por definir durante la implementación |
+| Alcance de la eliminación | Solo archivos temporales de procesamiento |
+| Gestión de errores | Registro de diagnóstico y revisión posterior |
 
-The eight-hour threshold represents the minimum file age for cleanup eligibility, not a guaranteed deletion time.
+El umbral de ocho horas representa la antigüedad mínima para que un archivo pueda eliminarse, no una hora de eliminación garantizada.
 
-## 6. Security Model
+## 6. Modelo de seguridad
 
-The Temporary Files Library is restricted to authorized users and automation accounts.
+La biblioteca de archivos temporales está restringida a usuarios y cuentas de automatización autorizados.
 
-### Permission Matrix
+### Matriz de permisos
 
-| Role | Access |
+| Rol | Acceso |
 |---|---|
-| Site Owners | Full Control |
-| Authorized Management Members | As required for administration |
-| Power Automate Processing Connection | Read / Write / Delete |
-| Center Groups | No access |
-| External Staff | No access |
+| Site Owners | Control total |
+| Miembros de gestión autorizados | Según las necesidades de administración |
+| Conexión de procesamiento de Power Automate | Lectura / Escritura / Eliminación |
+| Center Groups | Sin acceso |
+| Personal externo | Sin acceso |
 
-### Security Considerations
+### Consideraciones de seguridad
 
-- Restrict access to temporary workbooks.
-- Avoid granting access to external or center-based users.
-- Apply least-privilege permissions to automation connections.
-- Protect temporary files containing business information.
-- Review effective permissions and inherited access.
-- Ensure the cleanup workflow has the permissions required to delete eligible files.
+- Restringir el acceso a los libros temporales.
+- Evitar conceder acceso a usuarios externos o pertenecientes a grupos de centros.
+- Aplicar el principio de mínimo privilegio a las conexiones de automatización.
+- Proteger los archivos temporales que contengan información empresarial.
+- Revisar los permisos efectivos y los accesos heredados.
+- Asegurar que el flujo de limpieza dispone de los permisos necesarios para eliminar los archivos que cumplen los criterios.
 
-The library should not be used for permanent document storage.
+La biblioteca no debe utilizarse para el almacenamiento permanente de documentos.
 
-## 7. Relationship with Other Libraries
+## 7. Relación con otras bibliotecas
 
-| Library | Purpose |
+| Biblioteca | Finalidad |
 |---|---|
-| Derived Documents Library | Stores copies distributed from incoming requests |
-| Validation Library | Stores documents awaiting or undergoing validation |
-| Temporary Files Library | Stores temporary processing workbooks |
-| Export Library | Stores generated output workbooks |
+| Biblioteca de documentos derivados | Almacena copias distribuidas a partir de las solicitudes recibidas |
+| Biblioteca de validación | Almacena documentos pendientes de validación o en proceso de validación |
+| Biblioteca de archivos temporales | Almacena libros temporales utilizados durante el procesamiento |
+| Biblioteca de exportaciones | Almacena los libros de resultados generados |
 
-Each library has a separate responsibility within the document lifecycle.
+Cada biblioteca tiene una responsabilidad diferenciada dentro del ciclo de vida documental.
 
-## 8. Operational Considerations
+## 8. Consideraciones operativas
 
-### File Locking
+### Bloqueo de archivos
 
-Excel Online operations may temporarily lock workbooks.
+Las operaciones de Excel Online pueden bloquear temporalmente los libros.
 
-FL03 should handle deletion failures caused by active file locks without interrupting the entire cleanup process.
+FL03 debe gestionar los errores de eliminación provocados por bloqueos de archivos activos sin interrumpir todo el proceso de limpieza.
 
-### Concurrent Processing
+### Procesamiento simultáneo
 
-Temporary filenames should be unique to avoid collisions between simultaneous workflow executions.
+Los nombres de los archivos temporales deben ser únicos para evitar conflictos entre ejecuciones simultáneas de los flujos.
 
-### Processing Failures
+### Errores de procesamiento
 
-Temporary files left behind after failed processing runs remain eligible for scheduled cleanup.
+Los archivos temporales que permanezcan en la biblioteca tras una ejecución fallida seguirán siendo candidatos a la limpieza programada.
 
+### Seguridad de la conservación
 
-### Retention Safety
+FL03 selecciona archivos temporales para eliminarlos cuando tienen más de ocho horas de antigüedad.
 
-FL03 selects temporary files for deletion based on an age threshold of more than eight hours.
+El flujo no comprueba explícitamente si un archivo sigue siendo necesario para una operación de procesamiento activa.
 
-The workflow does not explicitly check whether a file is still required by an active processing operation.
+Los errores de eliminación, incluidos los causados por bloqueos activos de archivos Excel, se gestionan mediante mensajes de diagnóstico.
 
-Deletion failures, including those caused by active Excel file locks, are handled through diagnostic messages.
+Antes de desplegar el flujo en un entorno de producción, debe revisarse si el umbral de ocho horas es adecuado para la duración prevista de los procesos.
 
-The eight-hour threshold should be reviewed against expected processing durations before deploying the workflow in a production environment.
+## 9. Componentes relacionados
 
-## 9. Related Components
+- [Arquitectura de SharePoint](../architecture/sites-architecture.md)
+- [Biblioteca de validación](validation-library.md)
+- [Biblioteca de exportaciones](export-library.md)
+- [FL02 - Procesamiento de Excel](../../flows/FL02-demo/README.md)
+- [FL03 - Limpieza de archivos temporales](../../flows/FL03-demo/README.md)
 
-- [SharePoint Architecture](../architecture/sites-architecture.md)
-- [Validation Library](validation-library.md)
-- [Export Library](export-library.md)
-- [FL02 - Excel Processing](../../flows/FL02-demo/README.md)
-- [FL03 - Temporary File Cleanup](../../flows/FL03-demo/README.md)
+## 10. Estado de implementación
 
-## 10. Implementation Status
+Este documento describe la arquitectura prevista para una biblioteca de SharePoint de demostración.
 
-This document describes the intended architecture of a demonstration SharePoint library.
+La configuración es conceptual y no se proporciona como un paquete desplegable de aprovisionamiento de SharePoint.
 
-The configuration is conceptual and has not been provided as a deployable SharePoint provisioning package.
-
-Actual permissions, retention behavior, automation connections, and cleanup safeguards must be validated in a Microsoft 365 test environment.
+Los permisos reales, el comportamiento de conservación, las conexiones de automatización y las medidas de protección durante la limpieza deben validarse en un entorno de pruebas de Microsoft 365.
