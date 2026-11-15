@@ -29,7 +29,7 @@ flowchart TD
 ## Pasos del flujo
 
 1. Ejecutarse según una programación recurrente.
-2. Recuperar los archivos temporales de una biblioteca de documentos de SharePoint.
+2. Recuperar exclusivamente los archivos de la biblioteca independiente `Temporary Files Library`, ubicada en el subsitio de gestión.
 3. Filtrar los archivos con más de 8 horas de antigüedad.
 4. Recorrer los archivos filtrados.
 5. Eliminar cada archivo seleccionado.
@@ -40,9 +40,17 @@ flowchart TD
 | Configuración | Valor |
 |---|---|
 | Umbral de antigüedad | Más de 8 horas |
-| Destino | Archivos temporales de SharePoint |
+| Destino | `Temporary Files Library` (subsitio de gestión) |
 | Ejecución | Programación recurrente |
 | Frecuencia exacta de recurrencia | No especificada |
+
+## Relación con FL02 y las bibliotecas
+
+FL02 crea las copias temporales de trabajo en `Temporary Files Library` para procesarlas mediante Office Scripts. Los documentos originales permanecen en la biblioteca de validación y los resultados definitivos se guardan en la biblioteca de exportaciones. FL03 se ejecuta de forma independiente y su limpieza se limita a la biblioteca temporal: **no debe eliminar archivos de validación, documentos derivados ni exportaciones**.
+
+La antigüedad superior a ocho horas es el criterio conceptual de selección. Antes de implantarlo, debe verificarse que no existan ejecuciones activas que sigan necesitando los archivos y que la conexión de FL03 tenga permisos de eliminación solo donde corresponda.
+
+Consulta [Biblioteca de archivos temporales](../../Sharepoint/libraries/temporary-files-library.md), [FL02](../FL02-demo/README.md) y [Arquitectura de sitios](../../Sharepoint/architecture/sites-architecture.md).
 
 ## Gestión de diagnósticos
 
