@@ -46,7 +46,7 @@ Todos los ejemplos utilizan datos ficticios y escenarios empresariales genérico
 
 **Tecnologías:** Power Automate | SharePoint Online | Office Scripts
 
-**Estado:** Arquitectura conceptual y documentación técnica completadas. Traducción al castellano en preparación.
+**Estado:** Arquitectura conceptual y documentación técnica completadas. Documentación principal disponible en castellano.
 
 #### Descripción
 
@@ -82,6 +82,10 @@ Arquitectura de automatización integral diseñada para gestionar solicitudes ba
 - Automatización de Excel.
 - Tratamiento de errores y monitorización.
 - Diseño y documentación técnica.
+
+**[Explorar el proyecto y su documentación técnica](Power-Automate/SharePoint-Excel-Automation/)**
+
+[Índice de documentación técnica](Power-Automate/SharePoint-Excel-Automation/docs/README.md) · [Arquitectura de SharePoint](Power-Automate/SharePoint-Excel-Automation/Sharepoint/architecture/sites-architecture.md) · [Flujos FL01-FL05](Power-Automate/SharePoint-Excel-Automation/README.md#flujos-de-power-automate)
 
 > **Nota:** Este proyecto constituye una demostración conceptual. Los archivos JSON de los flujos no son directamente importables en Power Automate y no representan un despliegue listo para producción.
 
