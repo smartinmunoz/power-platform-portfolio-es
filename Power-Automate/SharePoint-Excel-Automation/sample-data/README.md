@@ -1,29 +1,28 @@
+# Datos de ejemplo
 
-# Sample Data
+Esta carpeta contiene archivos Excel ficticios utilizados para probar la demostración de Office Scripts.
 
-This folder contains fictional Excel files used to test the Office Scripts demonstration.
-
-## Available Files
+## Archivos disponibles
 
 ### sample-records.xlsx
 
-Sample input workbook containing fictional family records.
+Libro de Excel de entrada de ejemplo que contiene registros familiares ficticios.
 
-- Worksheet: `Input`
-- Includes primary (T) and associated (B) records.
-- Used to test `process-records.ts`.
+- Hoja de cálculo: `Input`
+- Incluye registros principales (`T`) y asociados (`B`).
+- Se utiliza para probar `process-records.ts`.
 
 ### export-template.xlsx
 
-Predefined Excel template for exporting selected records.
+Plantilla de Excel predefinida para exportar los registros seleccionados.
 
-- Worksheet: `Export`
-- Contains predefined column headers.
-- Data is written starting at cell B15.
-- Used to test `populate-export-template.ts`.
+- Hoja de cálculo: `Export`
+- Contiene encabezados de columna predefinidos.
+- Los datos se escriben a partir de la celda `B15`.
+- Se utiliza para probar `populate-export-template.ts`.
 
-## Security
+## Seguridad
 
-All sample records are fictional.
+Todos los registros de ejemplo son ficticios.
 
-No real personal, customer or corporate data is included.
+No se incluyen datos personales, de clientes ni corporativos reales.
