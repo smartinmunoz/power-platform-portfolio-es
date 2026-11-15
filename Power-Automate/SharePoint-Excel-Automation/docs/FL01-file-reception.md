@@ -1,68 +1,68 @@
-# FL01 - Excel File Reception and Distribution
+# FL01 - Recepción y distribución de archivos Excel
 
-## Overview
+## Descripción general
 
-This workflow automates the reception and controlled distribution of Excel files in SharePoint Online.
+Este flujo automatiza la recepción y distribución controlada de archivos Excel en SharePoint Online.
 
-It creates two copies of each submitted file in separate document libraries, applying different permissions according to their purpose.
+Crea dos copias de cada archivo presentado en bibliotecas de documentos diferentes, con permisos distintos según su finalidad.
 
-## Trigger
+## Desencadenador
 
-SharePoint - When an item is created.
+SharePoint: Cuando se crea un elemento.
 
-The workflow starts when a new item containing an Excel attachment is created in a SharePoint list.
+El flujo se inicia al crear un elemento nuevo con un archivo Excel adjunto en una lista de SharePoint.
 
-## Main Process
+## Proceso principal
 
-1. Detect the newly created SharePoint list item.
-2. Retrieve the attached Excel file.
-3. Create a copy in a protected document library.
-4. Configure access permissions for the protected copy. 
-5. Create a second copy in a validation document library.
-6. Configure permissions for the users authorized to review and validate the file.
-7. Update the relevant SharePoint metadata and processing information.
+1. Detectar el elemento de lista de SharePoint recién creado.
+2. Recuperar el archivo Excel adjunto.
+3. Crear una copia en una biblioteca de documentos protegida.
+4. Configurar los permisos de acceso de la copia protegida.
+5. Crear una segunda copia en una biblioteca de documentos de validación.
+6. Configurar los permisos de los usuarios autorizados para revisar y validar el archivo.
+7. Actualizar los metadatos de SharePoint y la información de procesamiento pertinentes.
 
-## Document Libraries
+## Bibliotecas de documentos
 
-### Protected Library
+### Biblioteca protegida
 
-Stores a protected copy of the submitted Excel file.
+Almacena una copia protegida del archivo Excel presentado.
 
-Only the SharePoint site administrator is authorized to modify these files.
+Solo el administrador del sitio de SharePoint está autorizado a modificar estos archivos.
 
-### Validation Library
+### Biblioteca de validación
 
-Stores a separate copy for manual review and validation.
+Almacena una copia independiente para su revisión y validación manual.
 
-Authorized validators have collaboration permissions during the validation stage.
+Los validadores autorizados tienen permisos de colaboración durante la fase de validación.
 
-## Workflow Boundaries
+## Alcance del flujo
 
-FL01 does not execute Office Scripts or process the contents of the Excel file.
+FL01 no ejecuta Office Scripts ni procesa el contenido del archivo Excel.
 
-Its responsibility is file reception, distribution and initial permission configuration.
+Su responsabilidad consiste en recibir y distribuir los archivos y configurar los permisos iniciales.
 
-The subsequent processing is managed by FL02 after manual validation.
+El procesamiento posterior lo gestiona FL02 tras la validación manual.
 
-## Technologies
+## Tecnologías
 
 - Power Automate
 - SharePoint Online
-- SharePoint document libraries
-- SharePoint REST API
-- Item-level and file-level permission management
+- Bibliotecas de documentos de SharePoint
+- API REST de SharePoint
+- Gestión de permisos a nivel de elemento y archivo
 
-## Technical Skills Demonstrated
+## Competencias técnicas demostradas
 
-- Event-driven automation
-- SharePoint attachment handling
-- Automated file distribution
-- Permission management
-- Separation of document storage and validation
-- Controlled document lifecycle
+- Automatización basada en eventos
+- Gestión de archivos adjuntos de SharePoint
+- Distribución automatizada de archivos
+- Gestión de permisos
+- Separación entre almacenamiento documental y validación
+- Ciclo de vida documental controlado
 
-## Security
+## Seguridad
 
-This documentation describes a generic demonstration architecture.
+Esta documentación describe una arquitectura de demostración genérica.
 
-No corporate URLs, real group identifiers, credentials, personal data or proprietary source code are included.
+No incluye URL corporativas, identificadores reales de grupos, credenciales, datos personales ni código fuente propietario.
