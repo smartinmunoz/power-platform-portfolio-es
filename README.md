@@ -36,6 +36,12 @@ Me centro en diseñar soluciones prácticas, mantenibles y seguras que mejoren l
 | JSON | Configuración y personalización |
 | GitHub | Control de versiones y documentación |
 
+## Estructura del repositorio
+
+- [Power Apps](Power-Apps/README.md): espacio para aplicaciones y soluciones empresariales.
+- [Power Automate](Power-Automate/README.md): proyectos de automatización y documentación técnica.
+- [Gobernanza de Power Platform](Power-Platform-Governance/README.md): espacio para prácticas de administración, seguridad y gobernanza.
+
 ## Proyectos
 
 Este portfolio reúne proyectos independientes de demostración centrados en automatización empresarial, integración de Microsoft 365 y diseño de soluciones.
