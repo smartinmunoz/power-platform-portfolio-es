@@ -1,230 +1,213 @@
-# Biblioteca de validación
+# Biblioteca de exportaciones
 
 ## 1. Descripción general
 
-La biblioteca de validación (*Validation Library*) es una biblioteca de documentos de SharePoint Online ubicada en el subsitio de gestión.
+La biblioteca de exportaciones (*Export Library*) es una biblioteca de documentos de SharePoint Online ubicada en el subsitio de gestión.
 
-Almacena libros de Excel pendientes de validación y procesamiento mediante Power Automate.
+Proporciona un almacenamiento centralizado para los libros de Excel generados por la solución de procesamiento automatizado.
 
-La biblioteca implementa seguridad a nivel de documento para proteger los archivos validados frente a modificaciones no autorizadas.
+La biblioteca separa los documentos de salida generados de los archivos originales almacenados en la biblioteca de validación.
 
-> **Aviso sobre el portfolio:** Esta documentación describe una demostración conceptual con nombres ficticios. No incluye direcciones URL de producción, credenciales, identificadores reales ni información confidencial.
+> **Aviso sobre el portfolio:** Esta documentación describe una demostración conceptual. Todos los nombres y ejemplos son ficticios. No se incluyen URL de producción, credenciales, identificadores reales ni información empresarial confidencial.
 
 ## 2. Configuración de la biblioteca
 
 | Propiedad | Configuración |
 |---|---|
-| Nombre de la biblioteca | Validation Library |
+| Nombre de la biblioteca | Export Library |
 | Ubicación | Subsitio de gestión |
 | Tipo de biblioteca | Biblioteca de documentos de SharePoint |
 | Formato documental | Libros de Excel |
-| Flujo de procesamiento | FL02 |
-| Modelo de seguridad | Permisos a nivel de biblioteca y de archivo |
-| Acceso del personal externo | No permitido |
-| Acceso de los grupos de centros | No permitido |
+| Generación de archivos | Power Automate FL02 |
+| Acceso de usuarios | Solo lectura |
+| Barra de comandos | Personalizable mediante formato JSON de SharePoint |
 
-## 3. Ciclo de vida documental
+## 3. Finalidad
 
-Los documentos llegan a la biblioteca de validación a través de FL01, que se inicia cuando se presenta una nueva solicitud en el sitio principal de SharePoint.
+La biblioteca de exportaciones almacena documentos Excel estructurados que se generan durante el ciclo de procesamiento.
 
-El ciclo de vida documental es el siguiente:
+Sus objetivos principales son:
 
-1. Un usuario autorizado presenta una solicitud con un libro de Excel adjunto mediante la lista de recepción de solicitudes.
-2. FL01 recupera el archivo Excel adjunto.
-3. FL01 crea una copia en la biblioteca de documentos derivados del sitio principal de SharePoint.
-4. FL01 crea otra copia independiente en la biblioteca de validación del subsitio de gestión.
-5. Los Site Owners y Site Members autorizados revisan y validan el documento.
-6. El estado del documento cambia a `Validated`, lo que desencadena FL02.
-7. FL02 interrumpe la herencia de permisos del archivo y concede acceso de lectura a Site Owners y Site Members.
-8. FL02 cambia el estado del documento de `Validated` a `Processing`.
-9. FL02 procesa los datos de Excel, crea registros de SharePoint, genera el libro de exportación y registra los resultados del procesamiento mediante FL04.
-10. FL02 actualiza el estado del documento a `Processed` cuando el procesamiento y el registro de ejecución terminan correctamente, o a `Error` si el procesamiento no puede completarse satisfactoriamente.
+- Centralizar los libros de Excel generados.
+- Proporcionar una ubicación coherente para los archivos de salida procesados.
+- Permitir que los usuarios autorizados consulten y descarguen archivos.
+- Separar los documentos originales de los documentos generados.
+- Facilitar la trazabilidad documental.
 
-La biblioteca de validación está restringida a los usuarios de gestión autorizados. El personal externo y los grupos de centros no pueden acceder a sus documentos.
+La estructura de la biblioteca puede adaptarse a diferentes necesidades empresariales.
 
-El estado `Processing` indica que el documento ha entrado en la fase protegida de procesamiento. No garantiza que las operaciones posteriores hayan terminado correctamente.
+## 4. Proceso de generación de exportaciones
 
-El estado `Processed` indica que el proceso ha finalizado satisfactoriamente, mientras que `Error` identifica errores de procesamiento o del registro de ejecución.
+FL02 genera un libro de Excel de exportación como parte del flujo de procesamiento de documentos validados.
 
-## 4. Estados del documento
+El proceso utiliza una plantilla de Excel y Office Scripts para transformar la información validada de origen en un libro de salida estructurado.
 
-El flujo de procesamiento utiliza metadatos documentales para controlar el ciclo de vida de cada archivo Excel.
+La secuencia conceptual es la siguiente:
 
-| Estado | Finalidad |
-|---|---|
-| Pending Validation | Documento pendiente de revisión |
-| Validated | Documento aprobado para su procesamiento; desencadena FL02 |
-| Processing | FL02 está ejecutándose y el documento de origen está protegido |
-| Processed | Procesamiento finalizado correctamente |
-| Error | El procesamiento ha fallado o no ha podido completarse satisfactoriamente |
+1. FL02 detecta un documento Excel validado en la biblioteca de validación.
+2. FL02 recupera el libro de origen y crea una copia temporal de procesamiento.
+3. Un Office Script extrae y estructura los datos del libro de origen.
+4. FL02 recupera la plantilla de Excel de exportación predefinida.
+5. FL02 crea un nuevo libro en la biblioteca de exportaciones utilizando la plantilla.
+6. Un segundo Office Script rellena el libro generado con los datos extraídos.
+7. El libro de exportación terminado queda disponible en la biblioteca de exportaciones.
+8. Los Site Owners, Site Members y Center Groups autorizados pueden consultar y descargar el documento generado con permisos de solo lectura.
 
-El estado `Validated` se utiliza en la condición de activación de FL02.
+La generación de exportaciones forma parte de FL02 y no requiere un flujo de Power Automate independiente.
 
-Durante la ejecución, FL02 cambia el estado a `Processing`.
+El flujo FL02 completo también incluye la creación de registros de SharePoint, la gestión de errores, el registro de ejecuciones mediante FL04 y la limpieza de archivos temporales mediante FL03.
 
-El estado final es `Processed` cuando el procesamiento y el registro de ejecución finalizan correctamente, o `Error` cuando falla el procesamiento, se producen errores al crear registros de SharePoint o falla el registro de ejecución obligatorio.
+## 5. Integración con Office Scripts
 
-Los valores exactos de las opciones de SharePoint y los nombres internos de las columnas deben coincidir con los de la implementación de destino.
+FL02 utiliza dos Office Scripts para extraer información del libro de origen validado y rellenar el libro de exportación generado.
 
-## 5. Permisos de la biblioteca
+### Extracción de datos de origen
 
-La biblioteca de validación utiliza permisos exclusivos en lugar de heredar un acceso sin restricciones del subsitio de gestión.
+[Ver process-records.ts](../../office-scripts/process-records.ts)
 
-### Permisos durante la validación
+El primer Office Script procesa la copia temporal del libro de Excel validado.
 
-| Rol | Acceso |
-|---|---|
-| Site Collection Administrators | Control administrativo |
-| Site Owners | Edición |
-| Site Members | Edición |
-| Center Groups | Sin acceso |
-| External Staff | Sin acceso |
+Su finalidad es:
 
-Los Site Owners y Site Members pueden revisar y modificar los documentos durante la fase de validación.
+- Leer y estructurar los datos del libro de origen.
+- Preparar la información extraída para las operaciones posteriores de Power Automate.
+- Devolver los datos procesados a FL02.
 
-### Permisos después del inicio del procesamiento
+### Rellenado del libro de exportación
 
-Cuando FL02 detecta un documento con estado `Validated`, aplica cambios en los permisos a nivel de archivo.
+[Ver populate-export-template.ts](../../office-scripts/populate-export-template.ts)
 
-| Rol | Acceso |
+El segundo Office Script se ejecuta sobre el libro creado a partir de la plantilla de exportación.
+
+Su finalidad es:
+
+- Recibir la información estructurada preparada durante la extracción.
+- Rellenar el libro de exportación.
+- Preparar el archivo Excel generado para su consulta y descarga.
+
+### Consideraciones de integración
+
+Los Office Scripts se ejecutan mediante Power Automate utilizando una conexión debidamente autorizada.
+
+La estructura de la plantilla de Excel, las columnas de origen y las correspondencias entre campos pueden adaptarse a los requisitos de cada implementación.
+
+Los scripts son ejemplos de demostración y deben probarse con las plantillas de Excel y las estructuras de datos previstas.
+
+## 6. Permisos
+
+La biblioteca de exportaciones proporciona acceso de solo lectura a los usuarios autorizados de gestión y a los grupos de centros.
+
+| Rol | Permiso |
 |---|---|
 | Site Collection Administrators | Control administrativo |
 | Site Owners | Lectura |
 | Site Members | Lectura |
-| Center Groups | Sin acceso |
+| Center Groups | Lectura |
 | External Staff | Sin acceso |
 
-FL02 interrumpe la herencia de permisos del archivo y concede acceso de solo lectura a Site Owners y Site Members antes de cambiar el estado del documento de `Validated` a `Processing`.
+Los permisos permiten a los usuarios autorizados visualizar y descargar los archivos generados sin concederles capacidades ordinarias de edición.
 
-Una conexión de automatización debidamente autorizada realiza las operaciones necesarias.
+FL02 utiliza una conexión de Power Automate debidamente autorizada para crear y rellenar los libros de exportación.
 
-Es necesario comprobar los permisos efectivos para garantizar que los usuarios no conserven acceso de edición a través de otros grupos o asignaciones directas.
+La conexión de automatización debe disponer de permisos suficientes para realizar estas operaciones.
 
-## 6. Protección de documentos procesados
+## 7. Personalización de la biblioteca de documentos
 
-FL02 modifica los permisos a nivel de archivo cuando un documento validado entra en la fase de procesamiento.
+La solución incluye formato JSON para la barra de comandos de SharePoint.
 
-El flujo realiza las siguientes operaciones:
+El archivo de demostración existente está disponible en:
 
-1. Interrumpe la herencia de permisos del archivo.
-2. Concede permiso de lectura al grupo Site Owners.
-3. Concede permiso de lectura al grupo Site Members.
-4. Cambia el estado del documento de `Validated` a `Processing`.
-5. Continúa con las operaciones principales de procesamiento de Excel.
-6. Actualiza el estado del documento a `Processed` cuando termina correctamente, o a `Error` si el procesamiento no puede completarse satisfactoriamente.
+[JSON de la barra de comandos de la biblioteca de documentos](../formatting/document-library-commandbar.json)
 
-Con este modelo de seguridad, los Site Owners y Site Members ordinarios no pueden modificar el documento protegido.
+El formato de la barra de comandos permite:
 
-Los Site Collection Administrators conservan sus privilegios administrativos.
+- Personalizar los comandos visibles.
+- Cambiar el nombre de las acciones.
+- Simplificar la interfaz de usuario.
+- Destacar las operaciones relevantes de la biblioteca.
 
-Deben validarse los permisos efectivos para garantizar que otras pertenencias a grupos o concesiones directas no proporcionen acceso de edición no previsto.
+El JSON de demostración debe revisarse y adaptarse a la experiencia prevista para la biblioteca.
 
-## 7. Flujo de procesamiento
+**Importante:** El formato JSON no aplica los permisos de SharePoint.
+
+Por ejemplo, ocultar un comando de edición no elimina el permiso subyacente que pueda tener un usuario para editar documentos.
+
+## 8. Diagrama del flujo de exportación
 
 ```mermaid
 flowchart TD
-    A["Documento Excel en la biblioteca de validación"]
-    B{"¿Estado Validated?"}
-    C["Se inicia FL02"]
-    D["Interrumpir herencia de permisos del archivo"]
-    E["Conceder lectura a Owners y Members"]
-    F["Cambiar estado a Processing"]
-    G["Procesar datos de Excel"]
-    H["Crear registros y libro de exportación"]
-    I["Ejecutar FL04 para registrar el procesamiento"]
-    J{"¿Procesamiento y registro correctos?"}
-    K["Cambiar estado a Processed"]
-    L["Cambiar estado a Error"]
+    A[Excel validado en la biblioteca de validación]
+    B[FL02 - Procesamiento de Excel]
+    C[Crear copia temporal de procesamiento]
+    D[Office Script - Extraer datos de origen]
+    E[Recuperar plantilla de exportación]
+    F[Crear libro en la biblioteca de exportaciones]
+    G[Office Script - Rellenar libro de exportación]
+    H[Libro de exportación terminado]
+    I[Owners, Members y Center Groups - Acceso de lectura]
 
     A --> B
-    B -->|Sí| C
+    B --> C
     C --> D
     D --> E
     E --> F
     F --> G
     G --> H
     H --> I
-    I --> J
-    J -->|Sí| K
-    J -->|No| L
 ```
 
-El diagrama resume la secuencia conceptual de procesamiento.
+El diagrama ilustra la secuencia de generación de exportaciones dentro de FL02.
 
-El flujo completo, incluido el tratamiento de errores y las relaciones entre registros, se documenta por separado en FL02.
+El flujo completo también incluye la creación de registros de SharePoint, la gestión de errores, los registros de procesamiento mediante FL04 y la limpieza de archivos temporales mediante FL03.
 
-## 8. Consideración importante sobre el procesamiento
+El libro generado se almacena en la biblioteca de exportaciones del subsitio de gestión, donde los Site Owners, Site Members y Center Groups autorizados disponen de acceso de solo lectura.
 
-El estado `Processing` indica que el documento ha entrado en la fase protegida de procesamiento.
+## 9. Organización documental
 
-No garantiza que todas las operaciones posteriores hayan finalizado correctamente.
+Los documentos generados pueden organizarse según las necesidades operativas.
 
-El documento solo se marca como `Processed` cuando el flujo de procesamiento y el registro de ejecución obligatorio finalizan satisfactoriamente.
+Entre las estrategias posibles se incluyen:
 
-Si falla el procesamiento, se producen errores al crear registros de SharePoint o falla el registro de ejecución obligatorio, el documento se marca como `Error`.
+- Convenciones para nombrar archivos.
+- Fecha de creación.
+- Referencias a documentos de origen.
+- Identificadores de ejecución del procesamiento.
+- Columnas de metadatos adicionales.
+- Vistas de SharePoint.
 
-La lista de registros de ejecución proporciona detalles y diagnósticos de las ejecuciones mediante FL04.
+Estas son opciones de diseño, no elementos de configuración obligatorios.
 
-## 9. Integración con Power Automate
-
-### FL01 - Recepción de documentos
-
-FL01 se inicia cuando se presenta una nueva solicitud mediante la lista de recepción de solicitudes del sitio principal de SharePoint.
-
-El flujo recupera el libro de Excel adjunto y crea una copia en la biblioteca de validación del subsitio de gestión.
-
-Esta copia se utiliza para la validación interna y el posterior procesamiento mediante FL02.
-
-También se crea otra copia independiente en la biblioteca de documentos derivados del sitio principal de SharePoint para su consulta en modo de solo lectura por los usuarios autorizados.
-
-### FL02 - Procesamiento de Excel
-
-Se encarga de:
-
-- Detectar documentos validados.
-- Modificar permisos a nivel de archivo.
-- Actualizar estados.
-- Extraer datos de Excel.
-- Crear registros principales y asociados.
-- Generar el libro de exportación.
-- Elaborar resúmenes y registrar resultados del procesamiento.
-
-### FL04 - Registros de ejecución
-
-Almacena los resultados del procesamiento y la información de diagnóstico en la lista de registros de ejecución.
-
-### FL05 - Permisos de registros
-
-Aplica permisos basados en centros a los registros procesados de SharePoint.
+La organización concreta debe adaptarse a cada implementación.
 
 ## 10. Consideraciones de seguridad
 
-- Interrumpir la herencia de permisos únicamente cuando sea necesario.
-- Excluir a los Center Groups no autorizados.
-- Restringir la modificación de documentos procesados.
-- Conservar el acceso administrativo de los Site Collection Administrators.
-- Validar los permisos efectivos después de modificarlos.
-- Utilizar una conexión de Power Automate debidamente autorizada.
-- No depender del formato JSON para aplicar medidas de seguridad.
-- Evitar publicar identificadores de producción en repositorios públicos.
+- Aplicar el principio de mínimo privilegio.
+- Limitar a permisos de solo lectura el acceso de los usuarios ordinarios.
+- Utilizar una conexión de automatización autorizada para crear archivos.
+- Comprobar los permisos efectivos de los usuarios que pertenecen a varios grupos.
+- Evitar que usuarios externos no autorizados accedan a los archivos generados.
+- No utilizar el formato JSON como mecanismo de seguridad.
+- Revisar los accesos cuando los libros generados contengan información sensible.
+- Validar los permisos en un entorno de pruebas controlado.
 
 ## 11. Documentación relacionada
 
 - [Subsitio de gestión](../sites/management-subsite.md)
+- [Biblioteca de validación](validation-library.md)
 - [Arquitectura de sitios de SharePoint](../architecture/sites-architecture.md)
-- [Lista de registros procesados](../lists/processed-records.md)
-- [Lista de registros de ejecución](../lists/processing-logs.md)
+- [JSON de la barra de comandos de la biblioteca de documentos](../formatting/document-library-commandbar.json)
 - [Descripción general de SharePoint](../README.md)
 
 ## 12. Estado de la documentación
 
 **Estado:** Documentación conceptual de la biblioteca completada.
 
-Los siguientes detalles de implementación dependen del entorno:
+Los siguientes detalles de implementación siguen siendo configurables:
 
-- Nombres exactos de las columnas de metadatos.
-- Definiciones de los roles de permisos de SharePoint.
-- Referencias de conexiones de Power Automate.
-- Identificadores de las bibliotecas de producción.
+- Estructura de la plantilla de exportación.
+- Convenciones para nombrar documentos.
+- Columnas de metadatos adicionales.
+- Permisos de la conexión de automatización.
+- Formato de la barra de comandos específico de la biblioteca.
 
-Este documento no es una plantilla automatizada para aprovisionar bibliotecas de SharePoint.
+Este documento no constituye una plantilla automatizada de aprovisionamiento de bibliotecas de SharePoint.
