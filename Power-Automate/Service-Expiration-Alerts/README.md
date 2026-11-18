@@ -73,4 +73,3 @@ A service expiring in 30 days with reminder periods `90`, `30`, `15` sends a rem
 
 To reuse either definition, configure the target SharePoint site and list, replace the placeholder list ID, configure the SharePoint and Office 365 Outlook connections, verify column names and status values, and test in the target environment. The published copies have not been independently validated after anonymization.
 
-**Known template detail:** The email section labeled *Days remaining* currently repeats the formatted expiration date rather than the calculated day count.
