@@ -18,15 +18,15 @@ Flujo de nube programado que consulta fechas de vencimiento en una lista de Shar
 | Fecha de vencimiento | `Fechadevencimiento` | Fecha y hora (recomendado: solo fecha) | Debe tener fecha para procesarse |
 | Período de aviso | `Periododeaviso` | Elección, permitir varias selecciones | Opciones de texto numérico como `90`, `30`, `15` |
 | Comunicar a | `Comunicara` | Persona o grupo, permitir varias selecciones | Obligatorio; los usuarios deben disponer de correo |
-| Estado | `Estado` | Elección única o texto | Se excluyen `Cancelado` y `Finalizado` |
+| Estado | `Estado` | Elección única o texto | Se excluyen `90-Cancelado` y `40-Finalizado` |
 
 **Nota:** Los nombres internos corresponden a la implementación. Si se crea una lista nueva, deben coincidir o habrá que adaptar las expresiones. `Title` es el campo supuesto para el nombre del servicio: conviene verificarlo. Que los demás campos estén marcados como obligatorios en SharePoint depende de la configuración de la lista.
 
 ## Funcionamiento del flujo
-1. **Recurrencia:** ejecución diaria, por ejemplo a las 08:00, con zona horaria de Madrid.
+1. **Recurrencia:** ejecución diaria, a las 09:00, con zona horaria de Madrid.
 2. **Obtener elementos:** excluir registros cancelados, finalizados y sin fecha mediante OData:
    ```text
-   Estado ne 'Cancelado' and Estado ne 'Finalizado' and Fechadevencimiento ne null
+   Estado ne '90-Cancelado' and Estado ne '40-Finalizado' and Fechadevencimiento ne null
    ```
 3. **Aplicar a cada servicio:** calcular los días naturales restantes hasta `Fechadevencimiento`.
 4. **Comprobar período de aviso:** verificar la coincidencia exacta entre los días restantes y las opciones de `Periododeaviso`.
@@ -47,4 +47,11 @@ Un servicio que vence en 30 días y tiene seleccionados `90`, `30`, `15` genera 
 - No se incluyen URL internas, correos personales ni credenciales.
 
 ## Estado
-Documentación del diseño actual. Pendiente de validar completamente la condición de selección múltiple y el envío de correo de extremo a extremo.
+**Probado y operativo:** El flujo original de Power Automate se ha probado correctamente en su entorno de origen. Los JSON anonimizados siguientes son definiciones de referencia, no soluciones completas de Power Platform listas para importar.
+
+- [Definición del flujo en inglés](solution/Workflows/service-expiration-alerts.en.json)
+- [Definición del flujo en castellano](solution/Workflows/service-expiration-alerts.es.json)
+
+Para reutilizar una definición hay que configurar el sitio y la lista de SharePoint, sustituir el identificador ficticio de la lista, configurar las conexiones de SharePoint y Office 365 Outlook, verificar los nombres de columna y valores de estado, y probarla en el entorno de destino. Las copias publicadas no se han validado de forma independiente después de anonimizarlas.
+
+**Detalle conocido de la plantilla:** El apartado «Días restantes» del correo muestra de nuevo la fecha de vencimiento en lugar del número de días calculado.
