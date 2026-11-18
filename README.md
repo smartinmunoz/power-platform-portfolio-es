@@ -95,6 +95,23 @@ Arquitectura de automatización integral diseñada para gestionar solicitudes ba
 
 > **Nota:** Este proyecto constituye una demostración conceptual. Los archivos JSON de los flujos no son directamente importables en Power Automate y no representan un despliegue listo para producción.
 
+### 02. Avisos de caducidad de servicios
+
+**Tecnologías:** Power Automate | SharePoint Online | Office 365 Outlook
+
+**Estado:** Flujo original probado y operativo; las definiciones publicadas son ejemplos anonimizados de referencia.
+
+Flujo programado que comprueba los vencimientos de servicios en SharePoint, compara los días restantes con los períodos de aviso configurados y envía un único correo a los destinatarios asignados cuando corresponde.
+
+- Ejecución diaria a las 09:00 (hora de Madrid).
+- Filtro por estado y fecha de vencimiento en SharePoint.
+- Coincidencia con períodos de aviso de selección múltiple y notificación agrupada.
+- Plantilla de correo en castellano, diagrama Mermaid y JSON de referencia.
+
+**[Explorar Avisos de caducidad de servicios](Power-Automate/Service-Expiration-Alerts/)** · [English version](https://github.com/smartinmunoz/power-platform-portfolio/tree/main/Power-Automate/Service-Expiration-Alerts)
+
+> **Nota de implementación:** El JSON publicado es una definición de referencia, no una solución directamente importable; requiere configurar SharePoint y las conexiones.
+
 ## Contacto
 
 Me interesa conectar con profesionales del ecosistema Microsoft Power Platform, automatización empresarial y tecnologías Microsoft 365.
