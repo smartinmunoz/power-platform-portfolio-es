@@ -1,75 +1,75 @@
-# Service Expiration Alerts | Power Automate
+# Avisos de caducidad de servicios | Power Automate
 
-[Español](README.es.md)
+[English](https://github.com/smartinmunoz/power-platform-portfolio/tree/main/Power-Automate/Service-Expiration-Alerts)
 
-## Overview
-Scheduled Power Automate cloud flow that checks upcoming service expiration dates in a SharePoint list and emails the people assigned to each service only when the remaining days match one of the selected reminder periods.
+## Descripción
+Flujo de nube programado que consulta fechas de vencimiento en una lista de SharePoint y envía un correo a los usuarios asignados cuando los días restantes coinciden con alguno de los períodos de aviso seleccionados.
 
-## Prerequisites
-- SharePoint / Microsoft Lists list
-- Power Automate with SharePoint connection
-- Office 365 Outlook connection for notifications
+## Requisitos
+- Lista de SharePoint / Microsoft Lists
+- Power Automate con conexión a SharePoint
+- Conexión a Office 365 Outlook para enviar notificaciones
 
-## Minimum SharePoint list schema
+## Estructura mínima de la lista de SharePoint
 
-| Display name (example) | Internal name | SharePoint column type | Requirements |
+| Nombre visible (ejemplo) | Nombre interno | Tipo de columna | Requisitos |
 |---|---|---|---|
-| Service | `Title` | Single line of text | Identifies the service; used in the email template |
-| Expiration date | `Fechadevencimiento` | Date and Time (date-only recommended) | Must contain a date for processed items |
-| Reminder periods | `Periododeaviso` | Choice, allow multiple selections | Numeric text options such as `90`, `30`, `15` |
-| Notify | `Comunicara` | Person or Group, allow multiple selections | Required; users must have an email address |
-| Status | `Estado` | Choice (single selection) or text | Values `90-Cancelado` and `40-Finalizado` are excluded |
+| Servicio | `Title` | Una línea de texto | Identifica el servicio y se utiliza en el correo |
+| Fecha de vencimiento | `Fechadevencimiento` | Fecha y hora (recomendado: solo fecha) | Debe tener fecha para procesarse |
+| Período de aviso | `Periododeaviso` | Elección, permitir varias selecciones | Opciones de texto numérico como `90`, `30`, `15` |
+| Comunicar a | `Comunicara` | Persona o grupo, permitir varias selecciones | Obligatorio; los usuarios deben disponer de correo |
+| Estado | `Estado` | Elección única o texto | Se excluyen `90-Cancelado` y `40-Finalizado` |
 
-**Note:** The internal names above reflect the implementation. A newly created SharePoint list must use matching internal names or the flow expressions must be updated. `Title` is the assumed service-name field; verify it in your list. Whether other fields are enforced as required by SharePoint depends on your list configuration.
+**Nota:** Los nombres internos corresponden a la implementación. Si se crea una lista nueva, deben coincidir o habrá que adaptar las expresiones. `Title` es el campo supuesto para el nombre del servicio: conviene verificarlo. Que los demás campos estén marcados como obligatorios en SharePoint depende de la configuración de la lista.
 
-## Flow outline
-1. **Recurrence:** run daily, at 09:00 in the Madrid time zone.
-2. **Get items:** filter out cancelled, finished, and undated items using OData:
+## Funcionamiento del flujo
+1. **Recurrencia:** ejecución diaria, a las 09:00, con zona horaria de Madrid.
+2. **Obtener elementos:** excluir registros cancelados, finalizados y sin fecha mediante OData:
    ```text
    Estado ne '90-Cancelado' and Estado ne '40-Finalizado' and Fechadevencimiento ne null
    ```
-3. **Apply to each service:** calculate the whole calendar days between today's Madrid date and `Fechadevencimiento`.
-4. **Reminder check:** determine whether the calculated number matches an exact value in the multi-select `Periododeaviso` column.
-5. **Select emails:** extract each `Email` from the `Comunicara` person array.
-6. **Join:** concatenate email strings with `;`.
-7. **Send email (V2):** send one message per qualifying service, addressed to all configured recipients.
+3. **Aplicar a cada servicio:** calcular los días naturales restantes hasta `Fechadevencimiento`.
+4. **Comprobar período de aviso:** verificar la coincidencia exacta entre los días restantes y las opciones de `Periododeaviso`.
+5. **Seleccionar correos:** extraer `Email` de cada persona en `Comunicara`.
+6. **Combinación:** unir las direcciones con `;`.
+7. **Enviar un correo electrónico (V2):** un único mensaje por servicio que cumpla el plazo, dirigido a todos sus destinatarios.
 
-## Workflow diagram
+## Diagrama del flujo
 
 ```mermaid
 flowchart TD
-    A["Daily recurrence at 09:00 (Madrid time)"] --> B["Get SharePoint list items"]
-    B --> C["Exclude cancelled, finished and undated items"]
-    C --> D{"Next service available?"}
-    D -- "Yes" --> E["Calculate days until expiration"]
-    E --> F{"Days match a selected reminder period?"}
-    F -- "Yes" --> G["Select recipient email addresses"]
-    G --> H["Join addresses with semicolons"]
-    H --> I["Send one Outlook email to all recipients"]
+    A["Recurrencia diaria a las 09:00 (hora de Madrid)"] --> B["Obtener elementos de SharePoint"]
+    B --> C["Excluir cancelados, finalizados y sin fecha"]
+    C --> D{"¿Quedan servicios por procesar?"}
+    D -- "Sí" --> E["Calcular días hasta el vencimiento"]
+    E --> F{"¿Coinciden con un período de aviso?"}
+    F -- "Sí" --> G["Seleccionar correos de destinatarios"]
+    G --> H["Unir direcciones con punto y coma"]
+    H --> I["Enviar un único correo de Outlook a todos"]
     I --> D
     F -- "No" --> D
-    D -- "No" --> J["Flow completed"]
+    D -- "No" --> J["Flujo finalizado"]
 ```
 
-The diagram reflects the published workflow's actions. It does not represent additional error handling, deduplication, or notification logging.
+El diagrama refleja las acciones del flujo publicado. No representa gestión adicional de errores, deduplicación ni registro de notificaciones enviadas.
 
-## Example
-A service expiring in 30 days with reminder periods `90`, `30`, `15` sends a reminder today. A service with only `90` selected does not.
+## Ejemplo
+Un servicio que vence en 30 días y tiene seleccionados `90`, `30`, `15` genera un aviso hoy. Si solo tiene seleccionado `90`, no se envía.
 
-## Implementation notes
-- SharePoint multi-choice fields may be returned as objects with `Value`; verify the actual **Get items** output before finalizing the exact-match condition.
-- In **Select**, use text mode with the expression `item()?['Email']`, so **Join** receives an array of strings rather than objects.
-- Do not add a second **Apply to each** for recipients when the intention is one email to all recipients.
-- Ensure pagination is enabled if the list exceeds the default retrieval limit.
-- Daily runs may resend notifications if the flow is run more than once on a matching date; this version does not include a sent-notification log.
-- Test with an isolated record or filter by a test item ID before enabling production notifications.
-- No tenant URL, personal email addresses, or organization-specific credentials are included.
+## Consideraciones técnicas
+- SharePoint puede devolver las opciones múltiples como objetos con `Value`. Verificar la salida real de **Obtener elementos** antes de cerrar la condición.
+- En **Seleccionar**, utilizar modo texto y la expresión `item()?['Email']`, para que **Combinación** reciba una matriz de cadenas y no objetos.
+- No es necesario un segundo **Aplicar a cada uno** para los destinatarios si se desea un único mensaje para todos.
+- Activar paginación si se supera el límite predeterminado de elementos recuperados.
+- Si se ejecuta el flujo varias veces el mismo día, puede repetir los avisos. Esta versión no registra notificaciones ya enviadas.
+- Probar con un registro aislado o filtrando por su ID antes de habilitar el envío en producción.
+- No se incluyen URL internas, correos personales ni credenciales.
 
-## Status
-**Tested and operational:** The original Power Automate flow has been successfully tested in its source environment. The anonymized JSON files below are reference workflow definitions, not complete importable Power Platform solutions.
+## Estado
+**Probado y operativo:** El flujo original de Power Automate se ha probado correctamente en su entorno de origen. Los JSON anonimizados siguientes son definiciones de referencia, no soluciones completas de Power Platform listas para importar.
 
-- [English workflow definition](solution/Workflows/service-expiration-alerts.en.json)
-- [Spanish workflow definition](solution/Workflows/service-expiration-alerts.es.json)
+- [Definición del flujo en inglés](https://github.com/smartinmunoz/power-platform-portfolio/blob/main/Power-Automate/Service-Expiration-Alerts/solution/Workflows/service-expiration-alerts.en.json)
+- [Definición del flujo en castellano](solution/Workflows/service-expiration-alerts.es.json)
 
-To reuse either definition, configure the target SharePoint site and list, replace the placeholder list ID, configure the SharePoint and Office 365 Outlook connections, verify column names and status values, and test in the target environment. The published copies have not been independently validated after anonymization.
+Para reutilizar una definición hay que configurar el sitio y la lista de SharePoint, sustituir el identificador ficticio de la lista, configurar las conexiones de SharePoint y Office 365 Outlook, verificar los nombres de columna y valores de estado, y probarla en el entorno de destino. Las copias publicadas no se han validado de forma independiente después de anonimizarlas.
 
