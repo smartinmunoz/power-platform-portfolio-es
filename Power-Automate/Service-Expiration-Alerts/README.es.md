@@ -73,4 +73,3 @@ Un servicio que vence en 30 días y tiene seleccionados `90`, `30`, `15` genera 
 
 Para reutilizar una definición hay que configurar el sitio y la lista de SharePoint, sustituir el identificador ficticio de la lista, configurar las conexiones de SharePoint y Office 365 Outlook, verificar los nombres de columna y valores de estado, y probarla en el entorno de destino. Las copias publicadas no se han validado de forma independiente después de anonimizarlas.
 
-**Detalle conocido de la plantilla:** El apartado «Días restantes» del correo muestra de nuevo la fecha de vencimiento en lugar del número de días calculado.
