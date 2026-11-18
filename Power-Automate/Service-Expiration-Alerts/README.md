@@ -34,6 +34,25 @@ Scheduled Power Automate cloud flow that checks upcoming service expiration date
 6. **Join:** concatenate email strings with `;`.
 7. **Send email (V2):** send one message per qualifying service, addressed to all configured recipients.
 
+## Workflow diagram
+
+```mermaid
+flowchart TD
+    A["Daily recurrence at 09:00 (Madrid time)"] --> B["Get SharePoint list items"]
+    B --> C["Exclude cancelled, finished and undated items"]
+    C --> D{"Next service available?"}
+    D -- "Yes" --> E["Calculate days until expiration"]
+    E --> F{"Days match a selected reminder period?"}
+    F -- "Yes" --> G["Select recipient email addresses"]
+    G --> H["Join addresses with semicolons"]
+    H --> I["Send one Outlook email to all recipients"]
+    I --> D
+    F -- "No" --> D
+    D -- "No" --> J["Flow completed"]
+```
+
+The diagram reflects the published workflow's actions. It does not represent additional error handling, deduplication, or notification logging.
+
 ## Example
 A service expiring in 30 days with reminder periods `90`, `30`, `15` sends a reminder today. A service with only `90` selected does not.
 
