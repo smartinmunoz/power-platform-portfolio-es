@@ -18,15 +18,15 @@ Scheduled Power Automate cloud flow that checks upcoming service expiration date
 | Expiration date | `Fechadevencimiento` | Date and Time (date-only recommended) | Must contain a date for processed items |
 | Reminder periods | `Periododeaviso` | Choice, allow multiple selections | Numeric text options such as `90`, `30`, `15` |
 | Notify | `Comunicara` | Person or Group, allow multiple selections | Required; users must have an email address |
-| Status | `Estado` | Choice (single selection) or text | Values `Cancelado` and `Finalizado` are excluded |
+| Status | `Estado` | Choice (single selection) or text | Values `90-Cancelado` and `40-Finalizado` are excluded |
 
 **Note:** The internal names above reflect the implementation. A newly created SharePoint list must use matching internal names or the flow expressions must be updated. `Title` is the assumed service-name field; verify it in your list. Whether other fields are enforced as required by SharePoint depends on your list configuration.
 
 ## Flow outline
-1. **Recurrence:** run daily, for example at 08:00 in the Madrid time zone.
+1. **Recurrence:** run daily, at 09:00 in the Madrid time zone.
 2. **Get items:** filter out cancelled, finished, and undated items using OData:
    ```text
-   Estado ne 'Cancelado' and Estado ne 'Finalizado' and Fechadevencimiento ne null
+   Estado ne '90-Cancelado' and Estado ne '40-Finalizado' and Fechadevencimiento ne null
    ```
 3. **Apply to each service:** calculate the whole calendar days between today's Madrid date and `Fechadevencimiento`.
 4. **Reminder check:** determine whether the calculated number matches an exact value in the multi-select `Periododeaviso` column.
@@ -47,4 +47,11 @@ A service expiring in 30 days with reminder periods `90`, `30`, `15` sends a rem
 - No tenant URL, personal email addresses, or organization-specific credentials are included.
 
 ## Status
-Documentation of the currently designed flow. Final production validation, especially the multi-choice condition and end-to-end email test, is pending.
+**Tested and operational:** The original Power Automate flow has been successfully tested in its source environment. The anonymized JSON files below are reference workflow definitions, not complete importable Power Platform solutions.
+
+- [English workflow definition](solution/Workflows/service-expiration-alerts.en.json)
+- [Spanish workflow definition](solution/Workflows/service-expiration-alerts.es.json)
+
+To reuse either definition, configure the target SharePoint site and list, replace the placeholder list ID, configure the SharePoint and Office 365 Outlook connections, verify column names and status values, and test in the target environment. The published copies have not been independently validated after anonymization.
+
+**Known template detail:** The email section labeled *Days remaining* currently repeats the formatted expiration date rather than the calculated day count.
