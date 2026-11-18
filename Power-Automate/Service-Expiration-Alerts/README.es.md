@@ -34,6 +34,25 @@ Flujo de nube programado que consulta fechas de vencimiento en una lista de Shar
 6. **Combinación:** unir las direcciones con `;`.
 7. **Enviar un correo electrónico (V2):** un único mensaje por servicio que cumpla el plazo, dirigido a todos sus destinatarios.
 
+## Diagrama del flujo
+
+```mermaid
+flowchart TD
+    A["Recurrencia diaria a las 09:00 (hora de Madrid)"] --> B["Obtener elementos de SharePoint"]
+    B --> C["Excluir cancelados, finalizados y sin fecha"]
+    C --> D{"¿Quedan servicios por procesar?"}
+    D -- "Sí" --> E["Calcular días hasta el vencimiento"]
+    E --> F{"¿Coinciden con un período de aviso?"}
+    F -- "Sí" --> G["Seleccionar correos de destinatarios"]
+    G --> H["Unir direcciones con punto y coma"]
+    H --> I["Enviar un único correo de Outlook a todos"]
+    I --> D
+    F -- "No" --> D
+    D -- "No" --> J["Flujo finalizado"]
+```
+
+El diagrama refleja las acciones del flujo publicado. No representa gestión adicional de errores, deduplicación ni registro de notificaciones enviadas.
+
 ## Ejemplo
 Un servicio que vence en 30 días y tiene seleccionados `90`, `30`, `15` genera un aviso hoy. Si solo tiene seleccionado `90`, no se envía.
 
